@@ -4,6 +4,7 @@ from django.views.generic import  View
 
 from .models import Post, Tag
 from .utils import ReadObjectMixin
+from .forms import TagForm
 
 
 def home_page(request):
@@ -24,4 +25,7 @@ class ReadTeg(ReadObjectMixin, View):
    model = Tag
    template = 'posts/read_tag.html'
 
-
+class CreateTag(View):
+    def get(self, request):
+        form = TagForm()
+        return render(request, 'posts/create_tag.html', context={'form': form })

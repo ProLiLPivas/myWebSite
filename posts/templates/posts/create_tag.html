@@ -1,0 +1,16 @@
+{% extends 'posts/base_posts.html' %}
+
+{% block title %}
+    Create
+{% endblock %}
+
+{% block content %}
+    <form action="{% url 'create_tag_url' %}" method="post">
+        {% csrf_token %}
+        {{ form.title}}
+        {{ form.slug }}
+    </form>
+    <button type="submit" class=" btn btn-primary">
+        Create Tag
+    </button>
+{% endblock %}
