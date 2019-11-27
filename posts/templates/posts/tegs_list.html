@@ -1,12 +1,13 @@
 {% extends 'posts/base_posts.html' %}
 
 {%block title %}
-    {{ post.title }} - {{block.super}}
+    {{ post.title }}
 {% endblock %}
 
 {%block content %}
     <h1 class="mb-4">Tags: </h1>
     {% for tag in tags %}
-        <h3>{{ tag.title }}</h3>
+        <h3 class="mb-3">{{ tag.title }}</h3>
+        <a href=" {{ tag.get_absolute_url }}" class="btn btn-primary"> go </a>
     {% endfor %}
 {% endblock %}
