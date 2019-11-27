@@ -1,13 +1,14 @@
 {% extends 'posts/base_posts.html' %}
 
-{% block title %}
-    postPage
+{%block title %}
+    {{ teg.title }}
 {% endblock %}
 
-{% block content %}
-    <h2 class="mb-4"> Posts  : </h2>
-
-    {% for post in posts %}
+{%block content %}
+    <h1 class="mb-5">
+        post with #{{ tag.title|title }} tag
+    </h1>
+    {% for post in tag.posts.all  %}
        <div class="card mb-4 " >
              <div class="card-header">
                  <strong> {{ post.title }} </strong>
