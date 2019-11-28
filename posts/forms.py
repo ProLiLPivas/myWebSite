@@ -1,17 +1,21 @@
 from django import forms
-from django.core.exceptions import *
+from django.core.exceptions import ValidationError
 
 from .models import *
 
 
 class TagForm(forms.Form):
-    title = models.CharField(max_length=150)
-    slug = models.SlugField(max_length=150)
+    title = forms.CharField(max_length=150)
+    slug = forms.CharField(max_length=150)
+
+    title.widget.attrs.update({'class':'form-control'})
+    slug.widget.attrs.update({'class': 'form-control'})
+
 
     def clean_slug(self):
         new_slug = self.claeand_data.get('slug').lower()
         if new_slug == 'create':
-            raise VaildationError('slug may not be "create"')
+            raise ValidationError('slug may not be "create"')
         return new_slug
 
 
