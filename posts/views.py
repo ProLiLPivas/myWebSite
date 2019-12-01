@@ -4,7 +4,7 @@ from django.views.generic import  View
 
 from .models import Post, Tag
 from .utils import ReadObjectMixin
-from .forms import TagForm
+from .forms import TagForm,PostForm
 
 
 def home_page(request):
@@ -17,13 +17,30 @@ class ReadPost(ReadObjectMixin, View):
     template = 'posts/read_post.html'
 
 
+class CreatePost(View):
+    def get(self, request):
+        form = PostForm()
+        return render(request, 'posts/create_post.html', context={'form': form })
+
+    def post(self, request):
+        bound_form = PostForm(request.POST)
+        if bound_form.is_valid():
+            new_post = bound_form.save()
+            return redirect(new_post)
+        return render(request, 'posts/create_tag.html', context={'form': bound_form})
+
+
+
+
 def tags_list(request):
     tags = Tag.objects.all()
     return render(request, 'posts/tegs_list.html', context={'tags': tags})
 
+
 class ReadTeg(ReadObjectMixin, View):
    model = Tag
    template = 'posts/read_tag.html'
+
 
 class CreateTag(View):
     def get(self, request):
