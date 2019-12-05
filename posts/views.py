@@ -3,7 +3,7 @@ from django.shortcuts import redirect
 from django.views.generic import  View
 
 from .models import Post, Tag
-from .utils import ReadObjectMixin, CreateObjectMixin
+from .utils import ReadObjectMixin, CreateObjectMixin, UpdateObjectMixin
 from .forms import TagForm,PostForm
 
 
@@ -24,6 +24,11 @@ class CreatePost(CreateObjectMixin, View):   # create new post
     template = 'posts/create_post.html'
 
 
+class UpdatePost(UpdateObjectMixin, View):
+    model = Post
+    model_form = PostForm
+    template = 'posts/update_post.html'
+
 
 '''Tag'''
 
@@ -40,4 +45,11 @@ class ReadTeg(ReadObjectMixin, View):
 class CreateTag(CreateObjectMixin, View):   # create new tag
     model_form = TagForm
     template = 'posts/create_tag.html'
+
+
+class UpdateTag(UpdateObjectMixin, View):
+    model = Tag
+    model_form = TagForm
+    template = 'posts/update_tag.html'
+
 
