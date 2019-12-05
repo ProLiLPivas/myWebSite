@@ -3,34 +3,29 @@ from django.shortcuts import redirect
 from django.views.generic import  View
 
 from .models import Post, Tag
-from .utils import ReadObjectMixin
+from .utils import ReadObjectMixin, CreateObjectMixin
 from .forms import TagForm,PostForm
 
 
-def home_page(request):
+'''Post'''
+
+def home_page(request):                     # first blog page
     posts = Post.objects.all()
     return render(request, 'posts/first.html', context={'posts': posts})
 
 
-class ReadPost(ReadObjectMixin, View):
+class ReadPost(ReadObjectMixin, View):      # read details about post
     model = Post
     template = 'posts/read_post.html'
 
 
-class CreatePost(View):
-    def get(self, request):
-        form = PostForm()
-        return render(request, 'posts/create_post.html', context={'form': form })
-
-    def post(self, request):
-        bound_form = PostForm(request.POST)
-        if bound_form.is_valid():
-            new_post = bound_form.save()
-            return redirect(new_post)
-        return render(request, 'posts/create_tag.html', context={'form': bound_form})
+class CreatePost(CreateObjectMixin, View):   # create new post
+    model_form = PostForm
+    template = 'posts/create_post.html'
 
 
 
+'''Tag'''
 
 def tags_list(request):
     tags = Tag.objects.all()
@@ -42,14 +37,7 @@ class ReadTeg(ReadObjectMixin, View):
    template = 'posts/read_tag.html'
 
 
-class CreateTag(View):
-    def get(self, request):
-        form = TagForm()
-        return render(request, 'posts/create_tag.html', context={'form': form })
+class CreateTag(CreateObjectMixin, View):   # create new tag
+    model_form = TagForm
+    template = 'posts/create_tag.html'
 
-    def post(self, request):
-        bound_form = TagForm(request.POST)
-        if bound_form.is_valid():
-            new_tag = bound_form.save()
-            return redirect(new_tag)
-        return render(request, 'posts/create_tag.html', context={'form': bound_form})

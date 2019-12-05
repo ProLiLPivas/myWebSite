@@ -12,7 +12,6 @@ class TagForm(forms.ModelForm):
         widgets = {
             'title': forms.TextInput(attrs={'class': 'form-control'}),
              'slug': forms.TextInput(attrs={'class': 'form-control'})
-
         }
 
     def clean_slug(self):
@@ -22,6 +21,7 @@ class TagForm(forms.ModelForm):
         if Tag.objects.filter(slug__iexact=new_slug).count():
             raise ValidationError('slug must be unique. We already have " {}" slug '.format(new_slug))
         return new_slug
+
 
 
 class PostForm(forms.ModelForm):
