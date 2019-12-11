@@ -1,0 +1,17 @@
+{% extends 'posts/base_posts.html' %}
+
+{% block title %}
+    Delete Post "{{ post.title }}"
+{% endblock %}
+
+{% block content %}
+    <form action="{% url 'delete_post_url' slug=post.slug %}" method="post" >
+        {% csrf_token %}
+        <h3> R U sure that u want 2 delete this post?  </h3>
+        <a href=" {%  url 'read_post_url'  slug=post.slug %}"> Cancel </a>
+        <button type="submit" class="btn btn-danger">Delete </button>
+
+    </form>
+    <h6 class="mb-5"></h6>
+
+{% endblock %}
