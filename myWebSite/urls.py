@@ -16,8 +16,11 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from .viwes import redirect_posts
+
 
 urlpatterns = [
+    path('', redirect_posts),
     path('admin/', admin.site.urls),
     path('blog/', include('posts.urls'))
 ]

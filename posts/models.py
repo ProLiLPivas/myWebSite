@@ -9,8 +9,6 @@ def generate_slug(title):
     return generated_slug + '_' + str(int(time()))
 
 
-
-
 class Post(models.Model):
     title = models.CharField(max_length=150, db_index=True)
     slug = models.SlugField(max_length=150, blank=True, unique=True)
@@ -18,8 +16,15 @@ class Post(models.Model):
     date_publication = models.DateTimeField(auto_now_add=True)
     tag = models.ManyToManyField('Tag', blank=True, related_name='posts')
 
+
     def get_absolute_url(self):
         return reverse('read_post_url', kwargs={'slug' : self.slug})
+
+    def get_update_url(self):
+        return reverse('update_post_url', kwargs={'slug': self.slug})
+
+    def get_delete_url(self):
+        return reverse('delete_post_url', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -28,14 +33,25 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        ordering = ['-date_publication']
+
 
 
 class Tag(models.Model):
     title = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, blank=True, unique=True)
 
+
     def get_absolute_url(self):
         return reverse('read_tag_url', kwargs={'slug' : self.slug})
+
+    def get_update_url(self):
+        return reverse('update_tag_url', kwargs={'slug': self.slug})
+
+    def get_delete_url(self):
+        return reverse('delete_tag_url', kwargs={'slug': self.slug})
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -44,3 +60,6 @@ class Tag(models.Model):
 
     def __str__(self):
         return self.title
+
+    class Meta:
+        ordering = ['title']
