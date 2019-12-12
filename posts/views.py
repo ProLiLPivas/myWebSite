@@ -7,6 +7,8 @@ from .models import Post, Tag
 from .utils import ReadObjectMixin, CreateObjectMixin, UpdateObjectMixin, DeleteObjectMixin
 from .forms import TagForm,PostForm
 
+from django.contrib.auth.mixins import LoginRequiredMixin
+
 
 '''Post'''
 
@@ -20,21 +22,22 @@ class ReadPost(ReadObjectMixin, View):      # read details about post
     template = 'posts/read_post.html'
 
 
-class CreatePost(CreateObjectMixin, View):   # create new post
+class CreatePost(LoginRequiredMixin, CreateObjectMixin, View):   # create new post
     model_form = PostForm
     template = 'posts/create_post.html'
+    raise_exception = True
 
-
-class UpdatePost(UpdateObjectMixin, View):
+class UpdatePost(LoginRequiredMixin, UpdateObjectMixin, View):
     model = Post
     model_form = PostForm
     template = 'posts/update_post.html'
+    raise_exception = True
 
-class DeletePost(DeleteObjectMixin, View):
+class DeletePost(LoginRequiredMixin, DeleteObjectMixin, View):
     model = Post
     template = 'posts/delete_post.html'
     url = 'posts_list_url'
-
+    raise_exception = True
 
 
 ''' Tag '''
@@ -49,18 +52,19 @@ class ReadTeg(ReadObjectMixin, View):
    template = 'posts/read_tag.html'
 
 
-class CreateTag(CreateObjectMixin, View):   # create new tag
+class CreateTag(LoginRequiredMixin, CreateObjectMixin, View):   # create new tag
     model_form = TagForm
     template = 'posts/create_tag.html'
+    raise_exception = True
 
-
-class UpdateTag(UpdateObjectMixin, View):
+class UpdateTag(LoginRequiredMixin, UpdateObjectMixin, View):
     model = Tag
     model_form = TagForm
     template = 'posts/update_tag.html'
+    raise_exception = True
 
-
-class DeleteTag(DeleteObjectMixin, View):
+class DeleteTag(LoginRequiredMixin, DeleteObjectMixin, View):
     model = Tag
     template = 'posts/delete_tag.html'
     url = 'tags_list_url'
+    raise_exception = True
