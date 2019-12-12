@@ -38,7 +38,7 @@ class DeletePost(LoginRequiredMixin, DeleteObjectMixin, View):
     template = 'posts/delete_post.html'
     url = 'posts_list_url'
     raise_exception = True
-    a = 1
+
 
 
 ''' Tag '''
