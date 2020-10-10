@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block settings_button %}
+    <div class="row">
+        <div class=" col-md-1 col-sm-0"  style="position: absolute; right: 0;">
+            <a  href="{% url 'create_chat_url' %}" class="btn"><strong>+</strong></a>
+        </div>
+{% endblock %}
+
+
+{% block content %}
+    {% if chats %}
+        {% for chat in chats %}
+
+            {% if chat.chat_id.is_public %}
+                <div class="card mb-0">
+                    <div class="card-body">
+                        <a href={{ chat.get_chat_url }}>{#  #} {{ chat.chat_id.chat_name }} </a>
+                        <a class="btn btn-info" href="{{chat.get_chat_url}}"
+                           style="position: absolute; right: 10px" >send message</a>
+                        <h6>
+                            <h5>{{chat.chat_id.get_last_message.text}}</h5>
+                            {{chat.chat_id.get_last_message.time}}
+                            {{chat.chat_id.get_last_message.from_user.profile}}
+                        </h6>
+                    </div>
+                </div>
+            {% else %}
+                <div class="card mb-0">
+                    <div class="card-body">
+                        <a href={{ chat.recipient.profile.get_absolute_url }}>{{ chat.recipient }}</a>
+                        <a class="btn btn-info" href="{{chat.get_chat_url}}"
+                           style="position: absolute; right: 10px" >send message</a>
+                        <h6>
+                            <h5>{{chat.chat_id.get_last_message.text}}</h5>
+                            {{chat.chat_id.get_last_message.time}}
+                            {{chat.chat_id.get_last_message.from_user.profile}}
+                        </h6>
+                    </div>
+                </div>
+            {% endif %}
+        {% endfor %}
+    {% else %}
+        <div>
+            <strong> Sorry u dont have any chats, yet</strong>
+            <br>
+            <a href="{% url 'create_chat_url' %}" class="btn btn-info mb-2">New</a>
+        </div>
+    {% endif %}
+
+{% endblock %}

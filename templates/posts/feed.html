@@ -1,0 +1,68 @@
+{% extends 'posts/base_posts.html' %}
+
+{% block title %}
+    postPage
+{% endblock %}
+
+{% block content %}
+    <div id="start_page">
+        <button class="btn btn-primary" v-on:click="show_create = !show_create">
+            CREATE NEW
+        </button>
+         {%  include 'includes/posts/create_post.html' %}
+        <script>
+            function makeAjaxRequest(method, url, data=null){
+                return axios({
+                    method: method,
+                    url: url,
+                    data: data,
+                    xsrfCookieName: 'csrftoken',
+                    xsrfHeaderName: 'X-CSRFToken',
+                    headers :{
+                        'Access-Control-Allow-Origin': '*',
+                    },
+                });
+            }
+
+            new Vue({
+                el:'#start_page',
+                data: {
+                    show_create: false,
+                    show_tag_input: false,
+                    post_title: '',
+                    post_body: '',
+                    attached_tag_text: '',
+                    attached_tags: [],
+                },
+                methods: {
+                    attachTag: function () {
+                        if(this.attached_tags.indexOf(this.attached_tag_text) === -1)
+                            this.attached_tags.push(this.attached_tag_text);
+                    },
+                    unattachTag: function(index) {
+                        delete this.attached_tags.splice(index, 1)
+                    },
+                    createPost: function () {
+                        var formData = new FormData();
+                        formData.append('title', this.post_title);
+                        formData.append('body', this.post_body);
+                        formData.append('tags', this.attached_tags);
+                        formData.append('is_update', false);
+                        var ajax = makeAjaxRequest('post', '{% url 'create_post_url' %}', formData);
+
+                    },
+                }
+            })
+        </script>
+    </div>
+
+    <div>
+        <h2 class="mb-4">Posts: </h2>
+        {% for post in posts %}
+           {% include 'includes/posts/post_template.html' %}
+        {% endfor %}
+    </div>
+
+
+
+{% endblock %}

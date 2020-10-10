@@ -1,0 +1,62 @@
+<transition name="repost-show">
+    <div v-if="show_repost">
+        <div class="modal fade show " aria-modal="true" role="dialog" style="display: block; ">
+            <div class="modal-dialog">
+                {% verbatim %}
+                <div class="modal-content ">
+                    <div class="row">
+                        <div class="col-sm-10"></div>
+                        <button class="btn col-sm-1" v-on:click="show_repost = false" type="button">×</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="custom-control custom-radio">
+                            <input v-on:click="selected_field = 0" type="radio"
+                                   id="customRadio1" name="customRadio" class="custom-control-input" >
+                            <label class="custom-control-label" for="customRadio1">Reposet 2 ur blog</label>
+                        </div>
+                        <div class="custom-control custom-radio">
+                            <input v-on:click="selected_field = 1" type="radio"
+                                   id="customRadio2" name="customRadio" class="custom-control-input">
+                            <label class="custom-control-label" for="customRadio2">Send this post some one</label>
+                        </div>
+                        <div v-if="selected_field === 0">
+                            <h3>blog</h3>
+                            <form>
+                                <div>
+                                    <textarea v-model="inputText" type="text" class="form-control mb-2"
+                                              placeholder="enter ur text ..." rows="3">></textarea>
+                                    <button type="submit" class="btn btn-info align-item-right">Go</button>
+                                </div>
+                            </form>
+
+                        </div>
+                        <div v-if="selected_field === 1">
+                            <h3> Send post 2 chat</h3>
+
+                            <div class="btn-group">
+                              <button type="button" class="btn btn-danger dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                Action
+                              </button>
+                              <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#">Action</a>
+                                <a class="dropdown-item" href="#">Another action</a>
+                                <a class="dropdown-item" href="#">Something else here</a>
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Separated link</a>
+                              </div>
+                            </div>
+
+
+
+                            <textarea v-model="inputText" type="text" class="form-control mb-2"
+                                placeholder="enter ur text ..." rows="3">></textarea>
+                            <button type="submit" class="btn btn-info align-item-right">Go</button>
+                        </div>
+
+                    </div>
+                </div>
+                {% endverbatim %}
+            </div>
+        </div>
+    </div>
+</transition>

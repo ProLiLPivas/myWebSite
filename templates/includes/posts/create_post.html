@@ -1,0 +1,46 @@
+
+<transition>
+    <div v-if="show_create">
+        <form> {#   action="{% url 'create_post_url' %}" method="post">#}
+            {% csrf_token %}
+            <input v-model="post_title" name="title" class="form-control mb-2 mt-2">
+            <textarea v-model="post_body" name="body" class="form-control mb-2" rows="5"> </textarea>
+        </form>
+        {% verbatim %}
+             <div v-if="attached_tags">
+                 <div v-for="(tag, index) in attached_tags">
+                     <div class="card col-6">
+                         <div  class="card-body">
+                             <div class="row">
+                                 <div class="col-10">
+                                     #{{ tag }}
+                                 </div>
+                                 <div class="col-1">
+                                     <button  class="btn" v-on:click="unattachTag(index)">x</button>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+        {% endverbatim %}
+
+        <button class="btn btn-light mt-2" v-on:click="show_tag_input = !show_tag_input">
+            <STRONG>+</STRONG>
+        </button>
+
+        <transition>
+             <div v-if="show_tag_input">
+                 <div class="row col-8">
+                     <input v-model="attached_tag_text" class="form-control mb-2 mt-2 col-6">
+                     <button class="btn btn-info" v-on:click="attachTag">add</button>
+                 </div>
+             </div>
+        </transition>
+
+        <form @submit.prevent="createPost">
+            <button type="submit" class="btn btn-primary mt-2 mb-2">Post</button>
+        </form>
+        <h6 class="mb-5"></h6>
+    </div>
+</transition>

@@ -1,0 +1,49 @@
+{% block settings_button %}
+    {% if user == profile.user %}
+        <div class="row">
+            <div class="btn-group">
+                <button type="button" class="btn btn-light">⚙</button>
+                <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <span class="sr-only">Toggle Dropdown</span>
+                </button>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="{% url 'update_profile' %}">edit profile </a>
+                    <a class="dropdown-item" href="#">settings</a>
+                <div class="dropdown-divider"></div>
+                    <a class="dropdown-item" href="{% url 'logout' %}">Logout</a>
+                </div>
+            </div>
+        </div>
+    {% else %}
+
+        <div class="btn-group">
+            <button type="button" class="btn btn-light"></button>
+            <button type="button" class="btn btn-light dropdown-toggle dropdown-toggle-split" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                <span class="sr-only">Toggle Dropdown</span>
+            </button>
+            <div class="dropdown-menu">
+
+                {% if relations.is_friends %}
+                    <p><a href="#" class="dropdown-item">message</a></p>
+                    {% if relations.is_subscribed %}
+                        <p><a class="dropdown-item" href="{{ profile.unsubscribe_url }}">stop getting feed</a></p>
+                    {% else %}
+                        <p><a class="dropdown-item" href="{{ profile.subscribe_url }}">start getting feed</a></p>
+                    {% endif %}
+                    <p><a href="{{ profile.remove_friend_url }}" class="dropdown-item"> remove </a></p>
+
+                {% elif relations.is_subscribed %}
+                    <p><a href="{{ profile.unsubscribe_url }}" class="dropdown-item"> Unsubscribe </a></p>
+                {% elif relations2.is_subscribed %}
+                    <p><a href="{{ profile.add_friend_url }}" class="dropdown-item"> Add to Friends </a></p>
+                {% else %}
+                    <p><a href="{{ profile.subscribe_url }}" class="dropdown-item"> Subscribe </a></p>
+                {% endif %}
+
+            <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#">Block user</a>
+            </div>
+        </div>
+
+    {% endif %}
+{% endblock %}

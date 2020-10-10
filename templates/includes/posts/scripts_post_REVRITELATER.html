@@ -1,0 +1,138 @@
+<script>
+    function makeAjaxRequest(method, url, data=null){
+        return axios({
+            method: method,
+            url: url,
+            data: data,
+            xsrfCookieName: 'csrftoken',
+            xsrfHeaderName: 'X-CSRFToken',
+            headers :{
+                'Access-Control-Allow-Origin': '*',
+            },
+        });
+    }
+
+    new Vue({
+        el:'#app{{ post.id }}',
+        data: {
+            show_comments: false,
+            show_repost: false,
+            show_create: false,
+            show_del: false,
+            show_upd: false,
+            show_comment_upd: false,
+            post_id: {{ post.id }},
+            inputText: null,
+            comments : [],
+            selected_field: null,
+
+            show_tag_input: false,
+            post_title: '',
+            post_body: '',
+            attached_tag_text: '',
+            attached_tags: [],
+
+        },
+        methods: {
+            // 4 POST
+            delPost: function(){
+                var formData = new FormData();
+                formData.append('post', this.post_id);
+                url = '{% url 'delete_post_url' %}';
+                var ajax = makeAjaxRequest('post', url, formData);
+                ajax.then(
+                    this.show_del = false
+                );
+            },
+            updatePost: function(){
+                var formData = new FormData();
+                formData.append('title', this.post_title);
+                formData.append('body', this.post_body);
+                formData.append('tags', this.attached_tags);
+                formData.append('is_update', true);
+                formData.append('post_id', this.post_id);
+                url = '{% url 'update_post_url' %}';
+                var ajax = makeAjaxRequest('post', url , formData);
+                ajax.then(
+
+                );
+            },
+            makeLike: function () {
+                var formData = new FormData();
+                formData.append('object_id', this.post_id);
+                url = '{% url 'like_post_url' %}';
+                var ajax = makeAjaxRequest('post', url, formData);
+                ajax.then(response => {
+                    console.log(this.$refs.like.innerText);
+                    if (response.data.is_liked){
+                        this.$refs.like.innerText = response.data.amount + '💙';
+                    }else {
+                        this.$refs.like.innerText = response.data.amount + '❤';
+                    }
+                });
+            },
+
+            // 4 COMMENTS
+            getComment: function () {
+                this.show_comments = !this.show_comments;
+                if(this.show_comments){
+                    var a = makeAjaxRequest('get', '{{ post.get_comments_url }}');
+                    a.then(response => {
+                        var r = response.data.comments;
+                        this.comments = r;
+                    });
+                }
+            },                    {# plus promis #}
+            postComment: function() {
+                var formData = new FormData();
+                if(this.inputText === null || this.inputText === '') {return}
+                formData.append('post', this.post_id);
+                formData.append('text', this.inputText);
+                url = '{{ post.get_comments_url }}';var ajax = makeAjaxRequest('post', url, formData);
+                ajax.then(response => {
+                    if (this.comments){
+                        this.comments.unshift(response.data.comments);
+                        this.inputText = '';
+                    }else{
+                        this.comments = [ response.data.comments ];
+                        this.inputText = '';
+                    }
+                    this.$refs.comment.innerText = response.data.comment_amount + '🗨';
+
+                });
+            },
+            likeComment: function(comment_number){
+                var formData = new FormData();
+                formData.append('object_id', this.comments[comment_number].id);
+                url = '{% url 'like_comment_url' %}';
+                var ajax = makeAjaxRequest('post', url, formData);
+                ajax.then( response =>{
+                    this.comments[comment_number].likes_amount = response.data.amount
+                });
+            },
+            delComment: function(comment_number){
+                var formData = new FormData();
+                formData.append('id', this.comments[comment_number].id);
+                formData.append('post_id', this.post_id);
+                url = '{% url 'delete_comment_url' %}';
+                var ajax = makeAjaxRequest('post', url, formData);
+                ajax.then(response => {
+                    delete this.comments.splice(comment_number, 1);
+                    this.$refs.comment.innerText = response.data.comment_amount + '🗨';
+
+                });
+            },
+            updateComment: function(){
+
+            },
+            // 4 REPOSTS
+
+            repostGet: function () {
+                console.log(this.selected_repost_field)
+            },
+            getChats: function () { },
+            repostToChat: function () { },
+            repostToWall: function () { },
+        },
+    });
+</script>

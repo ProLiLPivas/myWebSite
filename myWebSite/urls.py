@@ -13,14 +13,25 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
+from django.contrib.auth import views
 from django.urls import path, include
-
 from .viwes import redirect_posts
-
 
 urlpatterns = [
     path('', redirect_posts),
     path('admin/', admin.site.urls),
-    path('blog/', include('posts.urls'))
+    path('blog/', include('apps.posts.urls')),
+    path('user/',include('apps.user_profile.urls')),
+    path('friends/', include('apps.relations.urls')),
+    path('messages/', include('apps.message.urls')),
+    path('settings/', include('apps.settings.urls')),
+
+    path('login/', views.LoginView.as_view(), name='login'),
+    path('logout/', views.LogoutView.as_view(), name='logout'),
+    path('password-change/', views.PasswordChangeView.as_view(), name='password_change'),
+    path('password-change/done/', views.PasswordChangeDoneView.as_view(), name='password_change_done'),
 ]
+
+

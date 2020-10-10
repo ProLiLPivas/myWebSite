@@ -1,0 +1,54 @@
+<transition name="comments-show">
+    <div v-if="show_comments"   class="card-footer" style="background: white">
+        <form  @submit.prevent="postComment">
+            <div class="form-row align-items-center">
+                <div class="col-sm-11 my-1">
+                    <input v-model="inputText" type="text" class="form-control"  placeholder="enter ur text ...">
+                </div>
+                <div class="col-1 my-1">
+                    <button type="submit" class="btn btn-info mt-auto">Go</button>
+                </div>
+            </div>
+        </form>
+        {% verbatim %}
+        <div v-if="!comments">
+            this post dont have any comment
+        </div>
+        <div id="comments" v-for="(comment,index) in comments">
+            <div class="card">
+                <div class="card-body">
+                    <div v-if="!show_comment_upd" class="row">
+                        <div class="col-11">
+                            {{ comment.text }}
+                        </div>
+                        <div class="col-1">
+                            <button v-on:click="show_comment_upd = !show_comment_upd" class="btn">o</button>
+                            <form @submit.prevent="delComment(index)">
+                                <button type="submit" class="btn">x</button>
+                            </form>
+                            <form @submit.prevent="likeComment(index)">
+                                <div class="row">
+                                    {{ comment.likes_amount }}
+                                    <button type="submit" class="btn">🖤</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div v-else="">
+                        <div class="row">
+                            <div class="col-11">
+                                <textarea class="form-control" rows="1">{{ comment.text }}
+                                </textarea>
+                            </div>
+                            <div class="col-1">
+                                <button v-on:click="show_comment_upd = !show_comment_upd" class="btn">o</button>
+                                <button class="btn btn-info"> upd </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endverbatim %}
+    </div>
+</transition>

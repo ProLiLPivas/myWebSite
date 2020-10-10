@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{%  block settings_button %}
+    <div class="row">
+        <div class=" col-md-1 col-sm-0"  style="position: absolute; right: 0;">
+             <div class="btn-group">
+                 <a href="{% url 'messages_list_url' %}" class="btn btn-light">X</a>
+             </div>
+        </div>
+    </div>
+{%  endblock %}
+
+
+{% block content %}
+<div id="create_chat">
+    {% for friend in friends %}
+        <div class="card mb-0">
+            <div class="card-body">
+                <a href='{{ friend.user_two.get_absolute_url }}'>{{ friend.user_two }}</a>
+                <input v-on:click="getParticipantsList({{friend.user_two.id}})" type="checkbox">
+
+                <a class="btn btn-info" href="{{ friend.get_private_chat_url}}"
+                   style="position: absolute; right: 10px"></a>
+            </div>
+        </div>
+    {% endfor %}
+    <div v-if="is_public">
+        <input v-model="chat_name" class="form-control mt-3">
+    </div>
+
+    <form @submit.prevent="makeNewChat">
+        <button type="submit" class="btn btn-primary">make chat</button>
+    </form>
+</div>
+
+<script>
+    function makeAjaxRequest(method, url, data=null){
+        return axios({
+            method: method,
+            url: url,
+            data: data,
+            xsrfCookieName: 'csrftoken',
+            xsrfHeaderName: 'X-CSRFToken',
+            headers :{
+                'Access-Control-Allow-Origin': '*',
+            },
+        });
+    }
+    new Vue({
+        el:'#create_chat',
+        data: {
+            chat_name: '',
+            chosen_friends: [],
+            is_public: false,
+        },
+        methods: {
+            getParticipantsList: function (user_id) {
+                let position_number = this.chosen_friends.indexOf(user_id);
+                if(position_number === -1){
+                    this.chosen_friends.push(user_id);
+                }else{
+                    delete this.chosen_friends.splice(position_number, 1)
+                }
+
+                if(this.chosen_friends.length === 1){
+                    this.is_public = false;
+                }else if(this.chosen_friends.length > 1){
+                    this.is_public = true;
+                }
+
+            },
+            makeNewChat: function () {
+                var formData = new FormData();
+
+                if(this.chat_name || !this.is_public){
+                    formData.append('chat_name', this.chat_name)
+                }else{return}
+
+                formData.append('is_public', this.is_public);
+                formData.append('friends', this.chosen_friends);
+                url = '{% url 'create_chat_url' %}';
+                var a = makeAjaxRequest('post', url, formData)
+            },
+        }
+    })
+</script>
+
+{% endblock %}

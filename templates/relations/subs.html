@@ -1,0 +1,16 @@
+{% extends "relations/base_friends.html" %}
+
+{% block content %}
+
+
+    {% for sub in subs %}
+        <h1> </h1>
+        <div class="card mb-0">
+            <div class="card-body">
+                <a href="{{ sub.user_two.get_absolute_url }}"> {{ sub.user_two }}</a>
+            </div>
+        </div>
+    {% endfor %}
+
+    <h1>subs</h1>
+{% endblock %}

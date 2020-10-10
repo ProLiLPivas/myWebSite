@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+
+
+<html >
+<head>
+    <title> {{person.username}} </title>
+    <meta charset ="utf -8" />
+    <link rel="stylesheet" href="{% static 'css/style_day.css' %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.2/jquery.min.js"></script>
+    <script src="{% static 'js/friends_plans-jquery.js' %}"></script>
+    <script src="{% static 'js/friends_plans-ajax.js' %}"></script>
+</head>
+<body>
+    <div id ="container">
+        <div id ="header">
+            <ul id ="menu">
+                <span><a href ="" >Friends' Plans</a></span>
+                <span><a href ="{% url 'friends_plans:user' request.user.pk %}" >My Page</a></span>
+                <span><a href ="{% url 'friends_plans:listing' %}" >Users</a></span>
+                <span><a id="helpbutton" href ="" >HELP</a></span>
+            </ul>
+        </div>
+        <div id ="left">
+            <div id="border">
+                <div><a class="button" href="{% url 'friends_plans:user' person.pk %}">{{person.username}}</a></div>
+                <img class="cat" src={% static 'images/cat5.jpg' %} />
+            </div>
+            <div id="info">
+                <div class ="name"> {{person.email}} </div>
+                <div class ="name"> {{person.phone_number}} </div>
+                <div class ="name"> Student of {{person.place_of_work_or_study}} </div>
+            </div>
+            <div id="empty">  </div>
+
+        </div>
+        <div id ="right">
+            <div class="sep">
+                <div class="title"> {{person}}'s plans for {{day}}: </div>
+                <div class="value"> Status: {{day.level_of_business}} </div>
+                {% for event in day.event_set.all %}
+                <div class="title1"> <a class="button" href ="">Business: {{event.business}}</a></div>
+                <div class="title1"> Type: {{event.type}}</div>
+                <div class="title1"> Period of time: {{event.start_time}}-{{event.end_time}}</div> <br />
+                {% endfor %}
+            </div>
+            <p>
+                <strong id="like_count">{{ day.likes }}</strong> users like this day
+                {% if user.is_authenticated %}
+                <button id="likes" data-catid="{{day.id}}" class="btn btn-primary" type="button">
+                    <span class="glyphicon glyphicon-thumbs-up"></span>
+                    Like
+                </button>
+                {% endif %}
+            </p>
+            <div>
+            {% if person.id == request.user.id %}
+                <a href="{% url 'friends_plans:add_event' person.pk day.pk %}">Add event</a>
+            {% endif %}
+            </div>
+        </div>
+        <div id ="footer"> Copyright </div>
+    </div>
+</body>
+</html>
+
+{% extends 'friends_plans/base.html' %}
+{% load staticfiles %}
+    {% block title %} Users {% endblock %}
+
+    {% block content %}
+        <div id ="left">
+            <div id="toptitle"> Friends' Plans members:</div>
+            <table class="table">
+                    <thead>
+                      <tr>
+                        <th>Photo</th>
+                        <th>Name</th>
+                        <th>Occupation</th>
+                        <th>Days</th>
+                        <th>Places</th>
+                        <th>Wiews</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                    {% for person in users %}
+                      <tr>
+                        <td><span> <img class="small_cat" src={% static 'images/cat3.jpg' %} /> </span></td>
+                        <td><a href="{% url 'friends_plans:user' person.pk %}">{{ person.username|upper }}</a></span></td>
+                        <td><span>Student at {{ person.place_of_work_or_study}}</span></td>
+                        <td>{{person.day_set.all.count}}</td>
+                        <td>{{person.wish_list_set.all.count}}</td>
+                        <td>{{person.wish_list.comment_to_wish_list_set.all.count}}</td>
+                        <td>{% if person.views >= 0 %}
+                                {{person.views}} views
+                                {% elif person.views == 1 %}
+                                {{person.views}} view
+                            {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                    </tbody>
+                  </table>
+            <div class="pagination">
+                <div id="listing">
+                    <span class="step-links">
+                        {% if users.has_previous %}
+                            <a href="?page={{ users.previous_page_number }}">previous</a>
+                        {% endif %}
+
+                        <span class="current">
+                            Page {{ users.number }} of {{ users.paginator.num_pages }}.
+                        </span>
+
+                        {% if users.has_next %}
+                            <a href="?page={{ users.next_page_number }}">next</a>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        </div>
+    {% endblock %}

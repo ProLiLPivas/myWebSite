@@ -1,0 +1,149 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+<div id="chat" class="row">
+    <div class="container">
+    <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
+        <button class="btn">. . .</button>
+        <a href="{{ connection.get_chat_url }}"><h4><strong>{{ connection.chat_id.chat_name}}</strong></h4></a>
+        {% verbatim %}
+        <div v-if="chosenMessages">
+            {{ chosenMessages }}
+            del
+            <div v-if="chosenMessages.length === 1">
+                edit
+            </div>
+
+            resend
+            x
+        </div>
+    </nav>
+
+        <div v-if="messages">
+            <div v-for="(message, index) in messages">
+                <div v-if="message.from_user_id === user">
+                    <div class="row" >
+                        <div class="col-md-6 offset-6" >
+                            <div v-on:click="sendMessage" class="card">
+                                <div class="card-body">
+                                 <h6><a href=''>
+                                     {{message.from_user_id}}
+                                 </a></h6>
+                                 <h6 class="card-text">{{ message.text }}</h6>
+                                 <h6>{{ message.time }}</h6>
+                                 <button v-on:click="chooseMessage(index)" class="btn"><small>o</small></button>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-else="">
+                    <div class="row" >
+                        <div class="col-md-6" >
+                            <div class="card border-primary">
+                                <div class="card-body">
+                                    <h6><a href="">
+                                        {{message.from_user_id}}
+                                    </a></h6>
+                                    <p class="card-text">{{ message.text }}</p>
+                                    <h6>{{ message.time }}</h6>
+                                    <button v-on:click="chooseMessage(index)" class="btn"><small>o</small></button>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div v-else="">
+            u dont have any messages with this user
+        </div>
+
+    {% endverbatim %}
+
+    <br>
+    </div>
+         <input v-model="messageInput" class="form-control col-10 mr-2">
+        <form @submit.prevent="sendMessage">
+            <button type="submit" class="btn btn-primary">Send</button>
+        </form>
+        <button v-on:click="getMessages">test</button>
+</div>
+
+    <script>
+    function makeAjaxRequest(method, url, data=null){
+        return axios({
+            method: method,
+            url: url,
+            data: data,
+            xsrfCookieName: 'csrftoken',
+            xsrfHeaderName: 'X-CSRFToken',
+            headers :{
+                'Access-Control-Allow-Origin': '*',
+                'X-Requested-With':'XMLHttpRequest'
+            },
+        });
+    }
+
+    new Vue({
+        el: '#chat',
+        data:{
+            chat_id: '{{ connection.chat_id }}',
+            user: {{ request.user.id }},
+            messages: [],
+            chosenMessages: [],
+            messageInput: '',
+            url:'{{ connection.get_chat_url }}',
+
+        },
+        {#created(){#}
+
+        {# },#}
+        methods:{
+            chooseMessage: function(index){
+                var indexInList = this.chosenMessages.indexOf(this.messages[index]);
+                if( indexInList === -1){
+                    this.chosenMessages.push(this.messages[index]);
+                }else {
+                    delete this.chosenMessages.splice(indexInList, 1);
+                }
+                console.log(this.chosenMessages.length);
+            },
+            getMessages: function(){
+                 makeAjaxRequest('get', this.url)
+                     .then(response =>{
+                         this.messages = response.data.messages;
+
+                     });
+            },
+
+            sendMessage: function () {
+                var formData = new FormData();
+                formData.append('text', this.inputText);
+                makeAjaxRequest('post', this.url, formData)
+                    .then(this.messages.push(response.data.new_message))
+            },
+
+
+
+            {#delMessages: function () {#}
+            {#    var formData = new FormData();#}
+            {#    var list = [];#}
+            {#    for(message in this.chousenMessages)#}
+            {#        //list.push(message.id);#}
+            {#    formData.append('chousenMessages', list);#}
+            {#    formData.append('chat_id', this.chat_id);#}
+            {##}
+            {#    url = '{% url '' %}';#}
+            {#    var ajax = makeAjaxRequest('post', url, formData);#}
+            {#    ajax.then(response => {#}
+            {##}
+            {#    })#}
+            {# }#}
+
+        }
+    });
+</script>
+
+{% endblock %}
