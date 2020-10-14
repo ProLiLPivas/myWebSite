@@ -20,9 +20,10 @@
             show_create: false,
             show_del: false,
             show_upd: false,
-            show_comment_upd: false,
+            show_com_upd: '',
             post_id: {{ post.id }},
-            inputText: null,
+            inputText: '',
+            updateInput: '',
             comments : [],
             selected_field: null,
 
@@ -122,14 +123,39 @@
 
                 });
             },
-            updateComment: function(){
-
+            showUpdateComment: function(comment_number){
+                if(this.show_com_upd === comment_number){
+                    this.show_com_upd = '';
+                    this.updateInput = '';
+                }else {
+                   this.show_com_upd = comment_number;
+                   this.updateInput = this.comments[comment_number].text;
+                }
             },
+            updateComment: function(comment_number){
+                var formData = new FormData();
+                formData.append('comment_id', this.comments[comment_number].id);
+                formData.append('new_text', this.updateInput);
+                url = '{% url 'update_comment_url' %}';
+
+
+                var ajax = makeAjaxRequest('post', url, formData);
+
+                ajax.then(response => {
+                    this.comments[comment_number].text = this.updateInput;
+                    this.show_com_upd = '';
+                    this.updateInput = '';
+                });
+            },
+
+
             // 4 REPOSTS
 
             repostGet: function () {
                 console.log(this.selected_repost_field)
             },
+
+
             getChats: function () { },
             repostToChat: function () { },
             repostToWall: function () { },

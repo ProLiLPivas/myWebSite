@@ -12,7 +12,7 @@ urlpatterns = [
     path('like/', LikePost.as_view(), name='like_post_url'),
 
     path('comment/post=<int:id>/', Comments.as_view(), name='comment_url'), # split on comment create and comment read
-    # path('comment/update/', ),
+    path('comment/update/', UpdateComment.as_view(), name='update_comment_url'),
     path('comment/delete/', DeleteComment.as_view(), name='delete_comment_url'),
     path('comment/like', LikeComment.as_view(), name='like_comment_url'),
 

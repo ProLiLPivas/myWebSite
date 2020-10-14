@@ -17,12 +17,12 @@
         <div id="comments" v-for="(comment,index) in comments">
             <div class="card">
                 <div class="card-body">
-                    <div v-if="!show_comment_upd" class="row">
+                    <div v-if=" index !== show_com_upd" class="row">
                         <div class="col-11">
                             {{ comment.text }}
                         </div>
                         <div class="col-1">
-                            <button v-on:click="show_comment_upd = !show_comment_upd" class="btn">o</button>
+                            <button v-on:click="showUpdateComment(index)" class="btn">o</button>
                             <form @submit.prevent="delComment(index)">
                                 <button type="submit" class="btn">x</button>
                             </form>
@@ -37,12 +37,14 @@
                     <div v-else="">
                         <div class="row">
                             <div class="col-11">
-                                <textarea class="form-control" rows="1">{{ comment.text }}
-                                </textarea>
+                                <input v-model="updateInput" class="form-control">
                             </div>
                             <div class="col-1">
-                                <button v-on:click="show_comment_upd = !show_comment_upd" class="btn">o</button>
-                                <button class="btn btn-info"> upd </button>
+                                <button v-on:click="showUpdateComment(index)" class="btn">o</button>
+                                <form @submit.prevent="updateComment(index)">
+                                    <button class="btn btn-info"> upd </button>
+                                </form>
+
                             </div>
                         </div>
                     </div>

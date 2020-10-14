@@ -183,6 +183,16 @@ class UpdatePost(Create_or_Update_Objects, View):
     model = Post
     model_form = PostForm
 
+
+
+class UpdateComment(View):
+    def post(self, request):
+        com_obj = Comment.objects.get(id=request.POST['comment_id'])
+        new_text = request.POST['new_text']
+        bound_form = CommentForm({'text': new_text}, instance=com_obj)
+        if bound_form.is_valid():
+            bound_form.save()
+            return JsonResponse({'text': new_text})
 # class UpdateObjectMixin:
 #     model = None
 #     model_form = None

@@ -1,4 +1,6 @@
 import json
+from time import time
+
 from django.db.models import Q
 from django.forms import model_to_dict
 from django.http import JsonResponse
@@ -21,13 +23,6 @@ class MessagesLit(View):
         chats = Connection2Chat.objects.filter(user=request.user)
         return render(request, self.template, context={'user': request.user, 'chats': chats, })
 
-
-class Test(View):
-    template = 'message/chat.html'
-    def get(self, request):
-
-        return render(request, self.template)
-
 class BaseChat:
     """This mixin we use 2 render"""
     is_public = None
@@ -40,17 +35,16 @@ class BaseChat:
         if self.is_public:
             return Connection2Chat.objects.get(user=user, chat_num=identity)
         else:
-            return Connection2Chat.objects.get(
-                Q(user__id=identity) & ~Q(user=user) & Q(chat_id__is_public=False))
+            return Connection2Chat.objects.get(user=user, recipient__id=identity, chat_id__is_public=False)
 
 
     def get(self, request, id):
         try:
             chat_connection = self.get_private_or_public_chat(request.user, id)
-            messages = list(Message.objects.filter(chat_id=chat_connection.chat_id).values())
-
             if request.is_ajax():
-                return JsonResponse({'messages': messages}, status=200)
+                messages_model = list(Message.objects.filter(chat_id=chat_connection.chat_id))
+                messages_dict = [model_to_dict(message_obj) for message_obj in messages_model]
+                return JsonResponse({'messages': messages_dict}, status=200)
 
             return render(request, self.template, context={'connection': chat_connection})
 
@@ -86,12 +80,7 @@ class BaseChat:
             chat.message_amount += 1
             chat.save()
             return JsonResponse({'new_message': model_to_dict(message)})
-        # return
-        # messages = Message.objects.filter(chat_id=chat.id)
 
-
-        # return render(request, self.template, context={
-        #     'id': id, 'message': messages, 'user': request.user, 'chat': chat,})
 
 
 class PrivateChat(BaseChat, View):
@@ -165,30 +154,52 @@ class CreateChat(View):
         return id_list
 
 
-class DeleteMessage:
+class DeleteMessage(View):
     def post(self, request):
-        # obj = self.model.objects.get(id=request.POST['id'])
-        # if self.model == Post:
-        #     # if user == post_user_id.....     # checking that user deleting this post is creator or admin
-        #     user_object = Profile.objects.get(id=request.user.id)
-        #     user_object.posts -= 1
-        #     user_object.save()
-        # if self.model == Comment:
-        #     post_object = Post.objects.get(id=request.POST['post_id'])
-        #     post_object.comments_amount -= 1
-        #     post_object.save()
-        #     obj.delete()
-        #     return JsonResponse({'comment_amount': post_object.comments_amount})
-        # obj.delete()
-        pass
+        # if user == post_user_id.....     # checking that user deleting this post is creator or admin
 
-class UpdateMessage:
-    pass
+        messages = self.parseId(request.POST['chosenMessages'])
+        chat = Chat.objects.get(id=request.POST['chat_id'])
+        chat.message_amount -= len(messages)
+        chat.save()
+        messages.delete()
+
+        return JsonResponse({'is_del': 'u gay'})
+
+
+    def parseId(self, text):
+            id, q, id_list = '', '', []
+            for symbol in text:
+                if not symbol == ',':
+                    id += symbol
+                else:
+                    id_list.append(int(id))
+                    id = ''
+            id_list.append(int(id))
+
+            for message_id in id_list:
+                if q == '':
+                    q = Q(id=message_id)
+                else:
+                    q = q | Q(id=message_id)
+            messages = Message.objects.filter(q)
+            return messages
+
+class UpdateMessage(View):
+    model = None
+    model_form = None
+
+    def post(self, request):
+        msg_obj = Message.objects.get(id=request.POST['message_id'])
+        new_text = request.POST['new_text']
+        bound_form = MessageForm({'text': new_text}, instance=msg_obj)
+        if bound_form.is_valid():
+            bound_form.save()
+            return JsonResponse({'text': new_text})
 
 
 class ResendMessage:
     pass
-
 
 
 def addUser():

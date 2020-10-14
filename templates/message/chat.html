@@ -4,36 +4,38 @@
 {% block content %}
 <div id="chat" class="row">
     <div class="container">
-    <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
-        <button class="btn">. . .</button>
-        <a href="{{ connection.get_chat_url }}"><h4><strong>{{ connection.chat_id.chat_name}}</strong></h4></a>
-        {% verbatim %}
-        <div v-if="chosenMessages">
-            {{ chosenMessages }}
-            del
-            <div v-if="chosenMessages.length === 1">
-                edit
+        <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
+            <button class="btn">. . .</button>
+            <a href="{{ connection.get_chat_url }}"><h4><strong>{{ connection.chat_id.chat_name}}</strong></h4></a>
+            {% verbatim %}
+            <div v-if="chosenMessages.length !== 0" class="row">
+                <button v-on:click="deleteMessages" class="btn btn-primary mr-1">del</button>
+                <div v-if="chosenMessages.length === 1">
+                    <button v-on:click="show_upd=!show_upd;
+                            updateInput = chosenMessages[0].text;"
+                            class="btn btn-primary mr-1">edit</button>
+                </div>
+                <button class="btn btn-primary mr-1">resend</button>
+                <button v-on:click="chosenMessages = []; show_upd = false" class="btn">x</button>
             </div>
-
-            resend
-            x
-        </div>
-    </nav>
+        </nav>
+        <br>
 
         <div v-if="messages">
             <div v-for="(message, index) in messages">
-                <div v-if="message.from_user_id === user">
+                <div v-if="message.from_user === user">
                     <div class="row" >
                         <div class="col-md-6 offset-6" >
-                            <div v-on:click="sendMessage" class="card">
+                            <div class="card">
                                 <div class="card-body">
                                  <h6><a href=''>
-                                     {{message.from_user_id}}
+                                     {{message.from_user}}
                                  </a></h6>
                                  <h6 class="card-text">{{ message.text }}</h6>
                                  <h6>{{ message.time }}</h6>
-                                 <button v-on:click="chooseMessage(index)" class="btn"><small>o</small></button>
-                              </div>
+                                 <button v-on:click="selectMessage(index)" type="button" class="btn"><small>o</small></button>
+                                    <div v-if="chosenMessages.indexOf(messages[index]) !== -1 ">Q</div> {# !!! remove !!! #}
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -48,7 +50,7 @@
                                     </a></h6>
                                     <p class="card-text">{{ message.text }}</p>
                                     <h6>{{ message.time }}</h6>
-                                    <button v-on:click="chooseMessage(index)" class="btn"><small>o</small></button>
+                                    <button v-on:click="selectMessage(index)" class="btn"><small>o</small></button>
                               </div>
                             </div>
                         </div>
@@ -60,16 +62,26 @@
             u dont have any messages with this user
         </div>
 
-    {% endverbatim %}
+
 
     <br>
     </div>
+    <div v-if="!show_upd || chosenMessages.length !== 1" class="row col-12">
          <input v-model="messageInput" class="form-control col-10 mr-2">
         <form @submit.prevent="sendMessage">
             <button type="submit" class="btn btn-primary">Send</button>
         </form>
-        <button v-on:click="getMessages">test</button>
+    </div>
+    <div v-else="" class="row col-12">
+        <input v-model="updateInput" class="form-control col-9 mr-2">
+        <form @submit.prevent="updateMessage">
+            <button type="submit" class="btn btn-primary">Upd</button>
+        </form>
+        <button v-on:click="show_upd=!show_upd;" type="submit" class="btn col-1">x</button>
+    </div>
+    {% endverbatim %}
 </div>
+
 
     <script>
     function makeAjaxRequest(method, url, data=null){
@@ -89,59 +101,76 @@
     new Vue({
         el: '#chat',
         data:{
-            chat_id: '{{ connection.chat_id }}',
+            chat_id: '{{ connection.chat_id.id }}',
             user: {{ request.user.id }},
             messages: [],
             chosenMessages: [],
             messageInput: '',
+            updateInput: '',
             url:'{{ connection.get_chat_url }}',
+            show_upd: false,
 
         },
-        {#created(){#}
-
-        {# },#}
+        created(){
+            makeAjaxRequest('get', this.url)
+                .then(response =>{
+                    this.messages = response.data.messages;
+                });
+         },
         methods:{
-            chooseMessage: function(index){
+            sendMessage: function () {
+                console.log(1);
+                var formData = new FormData();
+                formData.append('text', this.messageInput);
+                makeAjaxRequest('post', this.url, formData)
+                    .then(response => {
+                        this.messages.push(response.data.new_message);
+                        this.inputText = '';
+                        this.chosenMessages = [];
+                    })
+            },
+            selectMessage: function(index){
                 var indexInList = this.chosenMessages.indexOf(this.messages[index]);
                 if( indexInList === -1){
                     this.chosenMessages.push(this.messages[index]);
                 }else {
+                     if (this.chosenMessages.length === 1){
+                         this.show_upd = false
+                     }
                     delete this.chosenMessages.splice(indexInList, 1);
                 }
-                console.log(this.chosenMessages.length);
             },
-            getMessages: function(){
-                 makeAjaxRequest('get', this.url)
-                     .then(response =>{
-                         this.messages = response.data.messages;
-
-                     });
-            },
-
-            sendMessage: function () {
+             deleteMessages: function () {
                 var formData = new FormData();
-                formData.append('text', this.inputText);
-                makeAjaxRequest('post', this.url, formData)
-                    .then(this.messages.push(response.data.new_message))
+                var list = this.chosenMessages.map(msg => {return msg.id});
+                formData.append('chosenMessages', list);
+                formData.append('chat_id', this.chat_id);
+
+                url = '{% url 'del_msg_url' %}';
+                var ajax = makeAjaxRequest('post', url, formData);
+                ajax.then(response => {
+                    this.chosenMessages.forEach(el =>{
+                        delete this.messages.splice(this.messages.indexOf(el), 1);
+                    });
+                    this.chosenMessages = [];
+                })
+             },
+            updateMessage: function () {
+                var formData = new FormData();
+                formData.append('message_id', this.chosenMessages[0].id);
+                formData.append('new_text', this.updateInput);
+                url = '{% url 'upd_msg_url' %}';
+                var ajax = makeAjaxRequest('post', url, formData);
+
+                ajax.then(response => {
+                    this.messages[this.messages.indexOf(this.chosenMessages[0])].text = this.updateInput;
+                    this.chosenMessages = [];
+                    this.updateInput = '';
+                })
             },
+            resendMessages: function () {
 
-
-
-            {#delMessages: function () {#}
-            {#    var formData = new FormData();#}
-            {#    var list = [];#}
-            {#    for(message in this.chousenMessages)#}
-            {#        //list.push(message.id);#}
-            {#    formData.append('chousenMessages', list);#}
-            {#    formData.append('chat_id', this.chat_id);#}
-            {##}
-            {#    url = '{% url '' %}';#}
-            {#    var ajax = makeAjaxRequest('post', url, formData);#}
-            {#    ajax.then(response => {#}
-            {##}
-            {#    })#}
-            {# }#}
-
+            },
         }
     });
 </script>
