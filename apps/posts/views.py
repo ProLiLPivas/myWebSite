@@ -4,7 +4,7 @@ from django.shortcuts import get_object_or_404
 from django.shortcuts import redirect
 from django.shortcuts import render
 from django.views.generic import View
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 
 from apps.message.models import Connection2Chat
 from apps.relations.models import Relations
@@ -14,8 +14,28 @@ from .models import *
 
 
 def home_page(request):                     # first blog page
+
+
     posts = Post.objects.all()
-    return render(request, 'posts/feed.html', context={'posts': posts, 'user': request.user})
+    return render(request, 'posts/feed.html')# , context={'posts': posts, 'user': request.user})
+
+class GetFeed(View):
+    def get(self, request):
+        posts = Post.objects.all()
+        dict = [model_to_dict(post) for post in posts]
+
+        for post in dict:
+            if post['tag']:
+                tags = []
+                for tag in post['tag']:
+                    m2d = model_to_dict(tag)
+                    tags.append(m2d)
+                post['tag'] = tags
+
+        return JsonResponse({
+            'posts': dict,
+            'user': {'id': request.user.id, 'is_staff': request.user.is_staff}
+        }, status=200)
 
 def tags_list(request):
     tags = Tag.objects.all()
@@ -128,21 +148,25 @@ class Repost:
         pass
 
 
-class Create_or_Update_Objects:   # create new post         LoginRequiredMixin, CreateObjectMixin,
+class Create_or_Update_Objects:                 # create new post         LoginRequiredMixin, CreateObjectMixin,
     model_form = None
-    raise_exception = True
 
     def post(self, request):
-        print(request.POST['is_update'])
-        if (request.POST['is_update']) == True:
+        if (request.POST['is_update']) == 'true':
             bound_form = self.model_form(request.POST, instance=Post.objects.get(id=request.POST['post_id']))
             if bound_form.is_valid():
-                bound_form.save()
+                new_obj = bound_form.save()
                 tags = self.parseTags(request.POST['tags'])
-                for tag in tags:
-                    new_tag = Tag.objects.get_or_create(title=tag.title, slug=tag.title)
-                    bound_form.tag.add(new_tag[0])
-                bound_form.save()
+
+                if tags != ['']:
+                    t = []
+                    for tag in tags:
+                        new_tag = Tag.objects.get_or_create(title=tag.title, slug=tag.title)
+                        new_obj.tag.add(new_tag[0])
+                        t.append(model_to_dict(new_tag[0]))
+                data = {'tag': t}
+                new_obj.save()
+                return JsonResponse(data, status=200)
         else:
             bound_form = self.model_form(request.POST)
             if bound_form.is_valid():
@@ -155,11 +179,19 @@ class Create_or_Update_Objects:   # create new post         LoginRequiredMixin, 
                 new_obj.save()
 
                 tags = self.parseTags(request.POST['tags'])
+
+                t = []
                 for tag in tags:
                     new_tag = Tag.objects.get_or_create(title=tag.title, slug=tag.title)
                     new_obj.tag.add(new_tag[0])
+                    t.append(model_to_dict(new_tag[0]))
+                m2d = model_to_dict(new_obj)
+                m2d['tag'] = t
+                data = {'post': m2d}
                 new_obj.save()
-        return JsonResponse({'form': ''}, status=200)
+                return JsonResponse(data, status=200)
+        return JsonResponse({}, status=200)
+
 
     def parseTags(self, tags_text):
         tag = ''
@@ -177,12 +209,10 @@ class Create_or_Update_Objects:   # create new post         LoginRequiredMixin, 
 class CreatePost(Create_or_Update_Objects, View):
     model = Post
     model_form = PostForm
-    raise_exception = True
 
 class UpdatePost(Create_or_Update_Objects, View):
     model = Post
     model_form = PostForm
-
 
 
 class UpdateComment(View):
@@ -193,66 +223,38 @@ class UpdateComment(View):
         if bound_form.is_valid():
             bound_form.save()
             return JsonResponse({'text': new_text})
-# class UpdateObjectMixin:
-#     model = None
-#     model_form = None
-#     template = None
-#
-#     def get(self, request, slug):
-#         obj = self.model.objects.get(slug__iexact=slug)
-#         bound_form = self.model_form(instance=obj)
-#         return render(request, self.template , context={'form': bound_form, self.model.__name__.lower() : obj})
-#
-#     def post(self, request, slug):
-#         obj = self.model.objects.get(slug__iexact=slug)
-#         bound_form = self.model_form(request.POST, instance=obj)
-#
-#         if bound_form.is_valid():
-#             new_obj = bound_form.save()
-#             return redirect(new_obj)
-#         return render(request, self.template,
-#         context={'form': bound_form, self.model.__name__.lower() : obj})
-#
-# class UpdatePost(LoginRequiredMixin, UpdateObjectMixin, View):
-#     model = Post
-#     model_form = PostForm
-#     template = 'posts/update_post.html'
-#
-# class UpdateTag(LoginRequiredMixin, UpdateObjectMixin, View):
-#     model = Tag
-#     model_form = TagForm
-#     template = 'posts/update_tag.html'
-#     raise_exception = True
-#
-# class UpdateComment:
-#     pass
 
 
 class DeleteObjectMixin:
+    '''
+
+    '''
     model = None
 
     def post(self, request):
-
         obj = self.model.objects.get(id=request.POST['id'])
         if self.model == Post:
-            # if user == post_user_id.....     # checking that user deleting this post is creator or admin
-            user_object = Profile.objects.get(id=request.user.id)
-            user_object.posts -= 1
-            user_object.save()
-        if self.model == Comment:
+            if request.user == obj.user or request.user.is_staff:    # checking that user deleting this post is creator or admin
+                user_object = Profile.objects.get(id=request.user.id)
+                user_object.posts -= 1
+                user_object.save()
+                obj.delete()
+                return JsonResponse({'posts_amount': user_object.posts})
+            else: return HttpResponse(status=403)
+        elif self.model == Comment:
             post_object = Post.objects.get(id=request.POST['post_id'])
-            post_object.comments_amount -= 1
-            post_object.save()
-            obj.delete()
-            return JsonResponse({'comment_amount': post_object.comments_amount})
-        obj.delete()
+            if request.user == obj.user or request.user == post_object.user or request.user.is_staff:
+                post_object.comments_amount -= 1
+                post_object.save()
+                obj.delete()
+                return JsonResponse({'comment_amount': post_object.comments_amount})
+            else: return HttpResponse(status=403)
 
 
-
-class DeletePost(DeleteObjectMixin, View): #LoginRequiredMixin,
+class DeletePost(DeleteObjectMixin, LoginRequiredMixin, View):
     model = Post
 
-class DeleteComment(DeleteObjectMixin, View):
+class DeleteComment(DeleteObjectMixin, LoginRequiredMixin, View):
     model = Comment
 
 # class DeleteTag(LoginRequiredMixin, DeleteObjectMixin, View):

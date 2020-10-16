@@ -12,6 +12,12 @@ class Chat(models.Model):
     chat_name = models.CharField(max_length=150, db_index=True, blank=True, null=True)
     chat_image = models.ImageField(blank=True, null=True)
     last_message_id = models.IntegerField(null=True)
+    # settings
+    # send_messages
+    # del_messages
+    #
+    #
+
 
     def get_last_message(self):
         return Message.objects.get(id=self.last_message_id)
@@ -23,6 +29,7 @@ class Connection2Chat(models.Model):
     chat_id = models.ForeignKey(Chat, on_delete=models.CASCADE)
     recipient = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='recipient') # using to get recipient in private chats
     chat_num = models.IntegerField(null=True)  # using to generate url for public chat
+    # role  = models.IntegerField(default=0), # 0 - simple user, 1 - admin, 3 - creator
 
     def get_chat_url(self):
         if self.chat_id.is_public:

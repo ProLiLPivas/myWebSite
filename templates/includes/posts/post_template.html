@@ -1,62 +1,54 @@
-<div id="app{{post.id}}">
+<div>
+    {%  verbatim %}
     <div class="card mb-4 ">
         <div class="card-header">
             <div class="row">
-                <h4> {{ post.user }} </h4>
-                <div class ="" style="position: absolute; right: 7px;">
-                    <a href="{{post.get_absolute_url}}" class="btn btn-info">read</a>
-                    {% if request.user == post.user or request.user.is_staff %}
-                        <button v-on:click="show_upd = !show_upd" class="btn btn-info" >🖊</button>
-                        <button v-on:click="show_del = !show_del" class="btn btn-danger">❌</button>
-                    {% endif %}
+                <h4 class="col-8"> {{ post.data.user }} </h4>
+                <div class ="row" style="position: absolute; right: 7px;">
+                    <a href="" class="btn btn-info">read</a>
+                    <div v-if="user.id === post.data.user || user.is_staff">
+                        <button v-on:click="showUpdatePost(post)" class="btn btn-info" >🖊</button>
+                        <button v-on:click="post.show_del = true" class="btn btn-danger">❌</button>
+                    </div>
                 </div>
-
             </div>
         </div>
-            {# body #}
-        <div v-if="!show_upd" class="card-body">
-            <h4 class="card-title"> {{ post.title }}</h4>
-            <h6 class="card-text"> {{post.body}}</h6>
-            <p class="card-text">
-                {% for tag in post.tag.all %}
-                    <a href="{{ tag.get_absolute_url }}">#{{tag}} </a>
-                {% endfor %}
-            </p>
+
+        <div v-if="!post.show_upd" class="card-body">
+            <h4 class="card-title"> {{ post.data.title }}</h4>
+            <h6 class="card-text"> {{post.data.body}}</h6>
+            <p class="card-text"></p>
+
+                <div v-for="tag in post.tags" class="row">
+                    <a href="">#{{tag.title}}</a>
+                </div>
 
             <div class="row" >
-                <div id="like">
-                    <form @submit.prevent="makeLike">
-                        {% csrf_token %}
-                        <button type="submit" class="btn" ref="like"> {{ post.likes_amount }} 💙</button>
+                    <form @submit.prevent="makeLike(post)">
+                        <div v-if="!post.is_liked">
+                            <button type="submit" class="btn" ref="like"> {{ post.data.likes_amount }} 💙</button>
+                        </div>
+                        <div v-else="">
+                            <button type="submit" class="btn" ref="like"> {{ post.data.likes_amount }} ❤</button>
+                        </div>
                     </form>
-                </div>
-                <div id ="comment">
-                    <button class="btn" v-on:click="getComment" ref="comment">
-                        {{ post.comments_amount}} 🗨
+
+                    <button class="btn" v-on:click="getComment(post)" ref="comment">
+                        {{post.data.comments_amount}} 🗨
                     </button>
-                </div>
-                <div id="repost">
-                    <button v-on:click="show_repost = !show_repost" type="button" class="btn">{{ post.reposts_amount}} ↗</button>
-                </div>
+                    <button v-on:click="show_repost = !show_repost" type="button" class="btn">{{ post.data.reposts_amount}} ↗</button>
+
                 <div class="" style="position: absolute; right: 10px;">
                     <i>{{ post.date_publication }}</i>
                 </div>
             </div>
-
-
-            {% include 'includes/posts/delete_post_window.html' %}
+        {%  endverbatim %}
             {% include 'includes/posts/comments_template.html' %}
-            {% include 'includes/posts/repost_window.html' %}
-
+            {% include 'includes/posts/delete_post_window.html' %}
+{#            {% include 'includes/posts/repost_window.html' %}#}
         </div>
         <div v-else="">
-            {% include 'includes/posts/update_post_template.html' %}
+                {% include 'includes/posts/update_or_create_post.html' %}
         </div>
-
-
-
-
-
-        {% include 'includes/posts/scripts_post_REVRITELATER.html' %}
     </div>
 </div>

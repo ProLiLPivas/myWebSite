@@ -1,12 +1,14 @@
 <transition name="delete-show">
-    <div v-if="show_del">
+    {% verbatim %}
+    <div v-if="post.show_del">
         <div class="modal fade show " aria-modal="true" role="dialog" style="display: block; ">
             <div class="modal-dialog">
                 <div class="modal-content">
                     <h3> R U sure that u want 2 delete this post?  </h3>
+                    {{ post.title }}
                     <div class="row">
-                        <button v-on:click="show_del = false" class="btn btn-info"> Cancel </button>
-                        <form @submit.prevent="delPost">
+                        <button v-on:click="post.show_del = false" class="btn btn-info"> Cancel </button>
+                        <form @submit.prevent="delPost(index, post.id)">
                             <button type="submit" class="btn btn-alert">Delete</button>
                         </form>
                     </div>
@@ -14,4 +16,5 @@
             </div>
         </div>
     </div>
+    {% endverbatim %}
 </transition>

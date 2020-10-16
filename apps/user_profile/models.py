@@ -18,15 +18,15 @@ class Profile(models.Model):
     subscribers = models.IntegerField(default=0)
     subscriptions = models.IntegerField(default=0)
 
-    # 0 -> all , 1 -> only subscribers, 2 -> only friends, 3 -> nobody
-    access_friends = models.IntegerField(default=0)
-    access_subscribers = models.IntegerField(default=0)
-    access_subscriptions = models.IntegerField(default=0)
-    access_about = models.IntegerField(default=0)
-    access_posts = models.IntegerField(default=0)
-    access_images = models.IntegerField(default=0)
-    access_messages = models.IntegerField(default=0)
-    access_profile = models.IntegerField(default=0)
+    # 1 -> all , 2 -> only subscribers, 3 -> only friends, 4 -> nobody ,  5 is only for u
+    access_messaging = models.IntegerField(default=1)
+    access_add_friends = models.IntegerField(default=1)
+    access_post = models.IntegerField(default=1)
+    access_about = models.IntegerField(default=1)
+    access_albums = models.IntegerField(default=1)
+    access_images = models.IntegerField(default=1)
+    access_stats = models.IntegerField(default=1)
+    access_profile = models.IntegerField(default=1)
 
 
     def __str__(self):

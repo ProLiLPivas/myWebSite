@@ -39,30 +39,6 @@
 
 
     <div>
-        {% if user == profile.user %}
-            {% include 'includes/../posts/../includes/posts/create_post.html' %}
-        {% else %}
-             <p><a href="{{profile.get_chat_url}}" class="btn btn-success">message</a> </p>
-            {% if relations.is_friends %}
-                {#  #}
-            {% elif relations.is_subscribed %}
-                <p><a href="{{ profile.unsubscribe_url }}" class="btn btn-secondary"> Unsubscribe </a></p>
-            {% elif relations2.is_subscribed %}
-                <p><a href="{{ profile.add_friend_url }}" class="btn btn-secondary"> Add to Friends </a></p>
-            {% else %}
-                <p><a href="{{ profile.subscribe_url }}" class="btn btn-secondary"> Subscribe </a></p>
-            {% endif %}
-        {% endif %}
-    </div>
 
-
-    <div>
-        {% if profile.posts != 0 %}
-            {% for post in posts %}
-               {% include 'includes/../posts/../includes/posts/post_template.html' %}
-            {% endfor %}
-        {% else %}
-            <h4> this user don't have any post</h4>
-        {% endif %}
     </div>
 {% endblock %}

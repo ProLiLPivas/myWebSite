@@ -42,7 +42,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'apps.relations',
     'apps.message',
-    'apps.settings',
+
 ]
 
 MIDDLEWARE = [

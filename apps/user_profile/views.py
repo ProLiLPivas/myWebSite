@@ -10,19 +10,32 @@ class UserProfile(View):
     model = Profile
     template = 'user_profile/get_user.html'
 
+    def get_relations_status(self, rel : Relations, ):
+
+        if rel.is_friends:
+            return 3
+        elif rel.is_subscribed:
+            return 2
+        elif rel.is_block: # if u blocked u cant see of do any anything with profile, cant messaging, cant add 2 friend
+            return 0
+        else:
+            return 1
+
+
     def get(self, request, slug):
 
         profile = get_object_or_404(self.model, slug__iexact=slug)
         if request.user == profile.user:
             return render(request, self.template, context={
-                self.model.__name__.lower(): profile,
+                'profile': profile,
                 'posts': Post.objects.filter(user=profile.user_id),
-                'user': request.user,})
+                'user': request.user,
+                'status': 5
+            })
         else:
             try:
                 user1 = Profile.objects.get(user=request.user)
                 user2 = Profile.objects.get(user=profile.user_id)
-                print(type(profile))
 
                 relations = Relations.objects.get(user_one=user1, user_two=user2)
                 relations2 = Relations.objects.get(user_one=user2, user_two=user1)
@@ -32,10 +45,10 @@ class UserProfile(View):
                     'posts': Post.objects.filter(user=profile.user_id),
                     'user': request.user,
                     'relations': relations,
-                    'relations2': relations2
+                    'relations2': relations2,
+                    'status': self.get_relations_status(relations)
                 })
             except Relations.DoesNotExist:
-
                 user1 = Profile.objects.get(user=request.user)
                 user2 = Profile.objects.get(user=profile.user_id)
                 relation = Relations(user_one=user1, user_two=user2)
