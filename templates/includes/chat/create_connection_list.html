@@ -1,0 +1,11 @@
+ {% verbatim %}
+     <div v-for="friend in friends">
+         <div class="card mb-0">
+             <div class="card-body">
+                 <a href=''>{{ friend.user_two }}</a>
+                 <input v-on:click="getParticipantsList(friend)" type="checkbox">
+                 <a class="btn btn-info" href="" style="position: absolute; right: 10px"></a>
+             </div>
+         </div>
+     </div>
+ {% endverbatim %}

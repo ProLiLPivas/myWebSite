@@ -14,8 +14,6 @@ from .models import *
 
 
 def home_page(request):                     # first blog page
-
-
     posts = Post.objects.all()
     return render(request, 'posts/feed.html')# , context={'posts': posts, 'user': request.user})
 

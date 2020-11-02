@@ -1,16 +1,74 @@
 <transition name="delete-show">
-    {% verbatim %}
-    <div v-if="post.show_del">
+    <div v-if="show_window">
         <div class="modal fade show " aria-modal="true" role="dialog" style="display: block; ">
             <div class="modal-dialog">
                 <div class="modal-content">
+                    {% verbatim %}
+                    <div class="card">
+                        <div class="card-title mt-3">
+                            <h3>{{ chat.chat_name }}</h3>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <button v-on:click="show_settings = !show_settings; show_add_new = false" class="btn">o</button>
+                        <button v-if="user.role >= chat.add_new_users" v-on:click="show_add_newUser" class="btn">+</button>
+                        <button v-on:click="show_window = false; show_add_new = false; show_settings = false;"
+                                class="btn">x</button>
+                    </div>
+                     <div v-if="user.role >= chat.change_chat_name">
+                         <button v-on:click="show_change_input = true" class="btn">change name</button>
+                     </div>
+                    <div v-if="user.role >= chat.change_chat_image">
+                        <a class="dropdown-item" href="#">change image</a>
+                    </div>
+                    <br>
+                    <div v-if="show_change_input && user.role >= chat.change_chat_name" class="row col-12 mb-2">
+                        <input v-model="change_chat_name_Input" class="col-9 form-control mr-1">
+                        <button v-on:click="changeChatName" class="btn btn-primary col-2">change</button>
+                        <button  v-on:click="show_change_input = false" class="btn col-1">x</button>
+                    </div>
+                    <div v-if="!show_add_new && !show_settings">
+                        <div v-for="chatmate in users">
+                            <div v-if="chatmate" class="card">
+                                <div class="card-body mr-3 ml-3 row">
+                                    <a v-bind:href="chatmate.url"> {{ chatmate.username }}</a>
+                                    <div v-if="chatmate.role === 3 && user.role >= chat.see_admins" class="row">
+                                        👑
+                                    </div>
+                                    <div v-if="chatmate.role === 2 && user.role >= chat.see_admins">
+                                        ⭐
+                                    </div>
+                                    <div v-if="user.role >= chat.remove_users">
+                                        <div v-if="user.role > chatmate.role">
+                                             <button v-on:click="kickUser(chatmate.id)" class="btn">x</button>
+                                        </div>
+                                    </div>
+                                    <div v-if="user.role >= chat.add_remove_admins">
+                                        <div v-if="chatmate.role === 2 ">
+                                            <button v-on:click="addRemoveAdmin(chatmate.id);"  class="btn">-</button>
+                                        </div>
+                                        <div v-else-if="chatmate.role === 1">
+                                            <button v-on:click="addRemoveAdmin(chatmate.id);" class="btn">+</button>
+                                        </div>
 
-                    
+                                    </div>
 
-
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endverbatim %}
+                    <div v-else-if="show_add_new && !show_settings">
+                        {% include 'includes/chat/create_connection_list.html' %}
+                        <div v-if="chosen_friends">
+                            <button v-on:click="addNewUser" class="btn btn-info">add</button>
+                        </div>
+                    </div>
+                    <div v-else-if="show_settings">
+                        {% include 'includes/chat/chat_settings.html' %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-    {% endverbatim %}
 </transition>

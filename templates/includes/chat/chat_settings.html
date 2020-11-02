@@ -1,0 +1,67 @@
+<transition>
+    <div v-if="show_settings">
+        <div>
+            <table class="table table-borderless">
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">All Users</th>
+                  <th scope="col">Only Admins</th>
+                  <th scope="col">Nobody</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">see messages</th>
+                  <td><input value=1 v-model="settings['see_messages']" type="checkbox" ></td>
+                  <td><input value=2 v-model="settings['see_messages']"  type="checkbox" ></td>
+                  <td><input value=3 v-model="settings['see_messages']"  type="checkbox" ></td>
+                </tr>
+                <tr>
+                  <th scope="row">send messages</th>
+                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">add new users</th>
+                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">remove users</th>
+                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">add/remove admins</th>
+                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                </tr>
+                <tr>
+                  <th scope="row">see admins</th>
+                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                </tr>
+                 <tr>
+                  <th scope="row">change chat name</th>
+                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                </tr>
+                 <tr>
+                  <th scope="row">change chat image</th>
+                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                </tr>
+              </tbody>
+            </table>
+            <button v-on:click="changeSettings" class="btn btn-info">apply</button>
+        </div>
+    </div>
+</transition>
