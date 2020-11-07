@@ -7,13 +7,14 @@ from .models import *
 class MessageForm(forms.ModelForm):
     class Meta:
         model = Message
-        fields = ['text', 'is_ancillary']
+        fields = ['text', 'is_ancillary', 'chat', 'from_user']
 
 
-class ChatForm(forms.ModelForm):
+class MessageUpdateForm(forms.ModelForm):
     class Meta:
-        model = Relations
-        fields = ['user_one']
+        model = Message
+        fields = ['text']
+        
 
 class ChatSettingsForm(forms.ModelForm):
     class Meta:

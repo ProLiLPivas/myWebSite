@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block settings_button %}
+    <div class="row">
+        <div class=" col-md-1 col-sm-0"  style="position: absolute; right: 0;">
+            <a  href="{% url 'create_chat_url' %}" class="btn"><strong>+</strong></a>
+        </div>
+{% endblock %}
+
+
+{% block content %}
+    <br>
+    {% verbatim %}
+    <div id="chats_list">
+        <div v-if="chats.length !== 0">
+            <div v-for="chat in chats">
+                <div class="card mb-0">
+                 <div class="card-body">
+                     <div v-if="chat.user_url">
+                         <h5><strong><a v-bind:href="chat.user_url"> {{ chat.name }} </a></strong></h5>
+                     </div>
+                     <div v-else="">
+                         <h5><strong><a v-bind:href="chat.url"> {{ chat.name }} </a></strong></h5>
+                     </div>
+                     <a class="btn btn-info" v-bind:href="chat.url"
+                        style="position: absolute; right: 10px" >send message</a>
+                     <div class="row">
+                         <h6 class="mr-2">{{chat.last_message_text}}</h6>
+                         {{chat.last_message_user}}
+                         {{chat.last_message_time}}
+                     </div>
+                 </div>
+                </div>
+            </div>
+        </div>
+        <div v-else="">
+            <strong> Sorry u dont have any chats, yet</strong>
+            <br>
+            <a v-bind:href="create_chat_url" class="btn btn-info mb-2">New</a>
+        </div>
+        </div>
+    </div>
+    {% endverbatim %}
+    <script>
+        function makeAjaxRequest(method, url, data=null){
+            return axios({
+                method: method,
+                url: url,
+                data: data,
+                xsrfCookieName: 'csrftoken',
+                xsrfHeaderName: 'X-CSRFToken',
+                headers :{
+                    'Access-Control-Allow-Origin': '*',
+                    'X-Requested-With':'XMLHttpRequest'
+                },
+            });
+        }
+        new Vue({
+            el: '#chats_list',
+            data:{
+               chats: [],
+               create_chat_url: "{% url 'create_chat_url' %}" ,
+            },
+            created(){
+                makeAjaxRequest('get', '{% url 'chat_list_url' %}')
+                    .then( response => {
+                        this.chats = response.data.chats
+                });
+            },
+        })
+    </script>
+{% endblock %}

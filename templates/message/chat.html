@@ -6,7 +6,7 @@
 <div id="chat" class="row">
     <div class="container"  v-if="is_chat_exist">
         <nav class="navbar navbar-light" style="background-color: #e3f2fd;">
-            <div class="row">
+            <div>
                 <div class="dropdown">
                     <button class="btn" type="button" id="dropdownMenuButton"
                             data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><h4>. . .</h4></button>
@@ -25,23 +25,35 @@
                     </div>
                 </div>
             </div>
-            <button v-on:click="show_window = !show_window" class="btn">
-                <h4><strong>{{ chat.chat_name}}</strong></h4>
-            </button>
-
-            <div v-if="chosenMessages.length !== 0" class="row">
-                <button v-on:click="deleteMessages" class="btn btn-primary mr-1">del</button>
-                <div v-if="chosenMessages.length === 1">
-                    <button v-on:click="show_upd=!show_upd; updateInput = chosenMessages[0].text;"
-                        class="btn btn-primary mr-1">edit</button>
+            <div>
+                <div v-if="chat.is_public">
+                     <button v-on:click="show_window = !show_window" class="btn">
+                        <h4><strong> {{ chat.chat_name }} </strong></h4>
+                     </button>
                 </div>
-                <button class="btn btn-primary mr-1">resend</button>
-                <button v-on:click="chosenMessages = []; show_upd = false" class="btn">x</button>
+                <div v-else="">
+                     <a v-bind:href=" recipient.url">
+                        <h4><strong> {{ recipient.username }}</strong></h4>
+                     </a>
+                </div>
+            </div>
+            <div>
+                <div v-if="chosenMessages.length !== 0 " class="row">
+                    <div v-if="show_msg_del">
+                        <button v-on:click="deleteMessages" class="btn btn-primary mr-1">del</button>
+                    </div>
+                    <div v-if="chosenMessages.length === 1 && chosenMessages[0].from_user === user.id">
+                        <button v-on:click="show_upd=!show_upd; updateInput = chosenMessages[0].text;"
+                            class="btn btn-primary mr-1">edit</button>
+                    </div>
+                    <button class="btn btn-primary mr-1">resend</button>
+                    <button v-on:click="chosenMessages = []; show_upd = false" class="btn">x</button>
+                </div>
             </div>
         </nav>
         <br>
 
-        <div v-if="messages">
+        <div v-if="messages.length !== 0">
             <div v-for="(message, index) in messages">
                 <div v-if="message.from_user === user.id && !message.is_ancillary">
                     <div class="row" >
@@ -71,6 +83,7 @@
                                     <p class="card-text">{{ message.text }}</p>
                                     <h6>{{ message.time }}</h6>
                                     <button v-on:click="selectMessage(index)" class="btn"><small>o</small></button>
+                                    <div v-if="chosenMessages.indexOf(messages[index]) !== -1 ">Q</div> {# !!! remove !!! #}
                               </div>
                             </div>
                         </div>
@@ -86,7 +99,7 @@
         <div v-else="">
             u dont have any messages with this user
         </div>
-    <br>
+        <br/>
     </div>
     <div v-else="">
         <h1>this chat do not exist</h1>
@@ -139,7 +152,7 @@
                 'username': '{{request.user.username}}',
                 'role': 0
             },
-            //role : 0,
+            recipient: '',
             url:'{{ connection.get_chat_url }}',
             messages: [],
             chosenMessages: [],
@@ -148,6 +161,7 @@
             change_chat_name_Input: '',
 
             users: [],
+            show_msg_del: true,
             show_upd: false,
             show_window: false,
             show_add_new: false,
@@ -163,51 +177,75 @@
             makeAjaxRequest('get', this.url)
                 .then(response => {
                     this.messages = response.data.messages;
-                    response.data.users.forEach(user => {
-                        this.users[user.id] = user;
-                        if(user.id === this.user.id){this.user.role = user.role;}
-                    });
                     this.chat = response.data.chat;
-                    this.settings['see_messages'] = this.chat.see_messages;
-                    this.settings['send_messages'] = this.chat.send_messages;
-                    this.settings['del_messages'] = this.chat.del_messages;
-                    this.settings['add_new_users'] = this.chat.add_new_users;
-                    this.settings['remove_users'] = this.chat.remove_users;
-                    this.settings['add_remove_admins'] = this.chat.add_remove_admins;
-                    this.settings['see_admins'] = this.chat.see_admins;
-                    this.settings['change_chat_name'] = this.chat.change_chat_name;
-                    this.settings['change_chat_image'] = this.chat.change_chat_image;
+                    if(chat.is_public){
+                        response.data.users.forEach(user => {
+                            this.users[user.id] = user;
+                            if(user.id === this.user.id){this.user = user;}
+                        });
+                    }else{
+                        response.data.users.forEach(user => {
+                            this.users[user.id] = user;
+                            if(user.id === this.user.id){
+                                     this.user = user;
+                            }else{
+                                this.recipient = user;
+                            }
+                        });
+                    }
                 });
         },
         methods:{
             sendMessage: function (messageText=null) {
                 var formData = new FormData();
+                formData.append('chat', this.chat.id);
                 if(messageText !== null){
+
                     formData.append('text', messageText);
                     formData.append('is_ancillary', true);
                 }else{
                     formData.append('text', this.messageInput);
                     formData.append('is_ancillary', false);
                 }
-                makeAjaxRequest('post', this.url, formData)
+                makeAjaxRequest('post', '{%  url 'messages_url' %}', formData)
                     .then(response => {
                         this.messages.push(response.data.new_message);
-                        this.inputText = '';
+                        this.messageInput = '';
                         this.chosenMessages = [];
                     })
             },
             selectMessage: function(index){
                 var indexInList = this.chosenMessages.indexOf(this.messages[index]);
+
                 if( indexInList === -1){
+                    if (!(this.messages[index].from_user === this.user.id) && this.user.role < this.chat.del_messages){
+                        this.show_msg_del = false;
+                    }
                     this.chosenMessages.push(this.messages[index]);
                 }else {
+                    if (!(this.messages[index].from_user === this.user.id || this.user.role < this.chat.del_messages)){
+                        this.show_msg_del = true;
+                    }
                      if (this.chosenMessages.length === 1){
                          this.show_upd = false
                      }
                     delete this.chosenMessages.splice(indexInList, 1);
                 }
             },
-             deleteMessages: function () {
+            updateMessage: function () {
+                var formData = new FormData();
+                formData.append('message_id', this.chosenMessages[0].id);
+                formData.append('text', this.updateInput);
+                formData.append('user_id', this.user.id);
+                url = '{% url 'upd_msg_url' %}';
+                var ajax = makeAjaxRequest('post', url, formData);
+                ajax.then(response => {
+                    this.messages[this.messages.indexOf(this.chosenMessages[0])].text = this.updateInput;
+                    this.chosenMessages = [];
+                    this.updateInput = '';
+                })
+            },
+            deleteMessages: function () {
                 var formData = new FormData();
                 var list = this.chosenMessages.map(msg => {return msg.id});
                 formData.append('chosenMessages', list);
@@ -222,20 +260,7 @@
                     this.chosenMessages = [];
                 })
              },
-            updateMessage: function () {
-                var formData = new FormData();
-                formData.append('message_id', this.chosenMessages[0].id);
-                formData.append('new_text', this.updateInput);
-                url = '{% url 'upd_msg_url' %}';
-                var ajax = makeAjaxRequest('post', url, formData);
-                ajax.then(response => {
-                    this.messages[this.messages.indexOf(this.chosenMessages[0])].text = this.updateInput;
-                    this.chosenMessages = [];
-                    this.updateInput = '';
-                })
-            },
             resendMessages: function () {
-
             },
 
             show_add_newUser: function(){
@@ -247,33 +272,10 @@
                     makeAjaxRequest('get', '{%  url 'create_chat_url' %}')
                         .then(response => {
                             this.friends = response.data.friends.filter(friend => {
-                                return this.users.map(user =>{return user.id}).indexOf(friend.user_two) === -1
-                            })
+                                return this.users.map(user =>{return user.id}).indexOf(friend.id) === -1})
                         });
                 }
             },
-            addNewUser: function () {
-                var formData = new FormData();
-                formData.append('chat_name', this.chat.id);
-                friends = this.chosen_friends.map(friend =>{ return friend.user_two });
-                formData.append('is_public', true );
-                formData.append('friends', friends);
-                url = '{% url 'create_chat_url' %}';
-                makeAjaxRequest('post', url, formData)
-                    .then(response => {
-                        this.show_add_new = false;
-                        console.log(response.data);
-                        response.data.new_users.forEach(user => {
-                            this.users.push({
-                                'id': user.id,
-                                'username': user.name,
-                                'role': 1,
-                            });
-                            this.sendMessage('user ' + user.id + ' join chat')
-                        });
-                    });
-            },
-
             getParticipantsList: function (user_id) {
                 let position_number = this.chosen_friends.indexOf(user_id);
                 if(position_number === -1){
@@ -287,35 +289,69 @@
                     this.is_public = true;
                 }
             },
+
+            addNewUser: function () {
+                var formData = new FormData();
+                formData.append('changes', 'add');
+                formData.append('chat_id', this.chat.id);
+                friends = this.chosen_friends.map(friend =>{ return friend.id });
+                formData.append('friends', friends);
+                makeAjaxRequest('post', this.url, formData)
+                    .then(response => {
+                        this.show_add_new = false;
+                        this.chosen_friends = [];
+                        response.data.new_users.forEach(user => {
+                            this.users[user.id] = user;
+                            this.sendMessage('user ' + user.username + ' join chat')
+                        });
+                    });
+            },
+
+
             kickUser: function (user_id) {
                 var formData = new FormData();
+                formData.append('changes', 'kick');
                 formData.append('chat_id', this.chat.id);
-                url = '{% url 'kick_user_url' %}';
-
                 if(user_id === -1){
-                    formData.append('user_id', this.user);
-                    this.sendMessage('user ' + this.user + ' leave chat');
+                    formData.append('user_id', this.user.id);
+                    this.sendMessage('user ' + this.user.username + ' leave chat');
                 }else{
                         formData.append('user_id', user_id);
                         this.sendMessage('user ' + this.users[user_id].username + ' was kicked');
-                        this.users.splice(user_id, 1);
+                        delete this.users.splice(user_id, 1);
                 }
-                makeAjaxRequest('post', url, formData);
+                makeAjaxRequest('post', this.url, formData);
             },
             addRemoveAdmin: function (user_id) {
+                console.log(this.users);
                 var formData = new FormData();
+                formData.append('changes', 'admin');
                 formData.append('chat_id', this.chat.id);
                 formData.append('user_id', user_id);
-                url = '{% url 'chat_admin_url' %}';
-                makeAjaxRequest('post', url, formData)
+
+                makeAjaxRequest('post', this.url, formData)
                     .then(response =>{
                         this.users[user_id].role = response.data.role;
-                        console.log(this.users[user_id].role);
-                        console.log(this.users)
                     })
             },
+
+            showSettings: function(){
+                this.settings['see_messages'] = this.chat.see_messages;
+                this.settings['send_messages'] = this.chat.send_messages;
+                this.settings['del_messages'] = this.chat.del_messages;
+                this.settings['add_new_users'] = this.chat.add_new_users;
+                this.settings['remove_users'] = this.chat.remove_users;
+                this.settings['add_remove_admins'] = this.chat.add_remove_admins;
+                this.settings['see_admins'] = this.chat.see_admins;
+                this.settings['change_chat_name'] = this.chat.change_chat_name;
+                this.settings['change_chat_image'] = this.chat.change_chat_image;
+            },
+
             changeSettings: function(){
                 var formData = new FormData();
+                formData.append('changes', 'settings');
+                formData.append('chat_id', this.chat.id);
+
                 formData.append('see_messages', this.settings['see_messages']);
                 formData.append('send_messages', this.settings['send_messages']);
                 formData.append('del_messages', this.settings['del_messages']);
@@ -329,10 +365,10 @@
             changeChatName: function () {
                 var formData = new FormData();
                 new_chat_name = this.change_chat_name_Input;
+                formData.append('changes', 'name');
                 formData.append('chat_id', this.chat.id);
                 formData.append('new_name', new_chat_name);
-                url = '{% url 'change_chat_name_url' %}';
-                makeAjaxRequest('post', url, formData)
+                makeAjaxRequest('post', this.url, formData)
                     .then( r => {
                         this.chat.chat_name = new_chat_name;
                         this.show_window = false;
@@ -342,15 +378,46 @@
                         this.sendMessage('chat name was changed on '+ new_chat_name);
                     });
             },
+             changeChatImage: function () {
+                var formData = new FormData();
+                formData.append('changes', 'img');
+            },
+
             deleteChat: function () {
+                url = '{% url 'delete_chat_url' %}';
                 var formData = new FormData();
                 formData.append('chat_id', this.chat.id);
-                url = '{% url 'delete_chat_url' %}';
                 makeAjaxRequest('post', url, formData).then(this.is_chat_exist = false)
             },
 
         }
     });
+
+
+    {#new Vue({#}
+    {#    data: {#}
+    {#       inst: new ChatApp(),#}
+    {#    },#}
+    {#    created: this.inst.created(),#}
+    {#    methods: {#}
+    {#        sendMessage: this.inst.sendMessage('{% url 'messages_url' %}', messageText=null), #}
+    {#        selectMessage: this.inst.selectMessage(index),#}
+    {#        updateMessage: this.inst.updateMessage('{% url 'upd_msg_url' %}'),#}
+    {#        deleteMessages: this.inst.deleteMessages('{% url 'del_msg_url' %}'),#}
+    {#        resendMessages: this.inst.resendMessages (),#}
+    {#        show_add_newUser: this.inst.show_add_newUser('{%  url 'create_chat_url' %}'),#}
+    {#        getParticipantsList: this.inst.getParticipantsList(user_id),#}
+    {#        addNewUser: this.inst.addNewUser(),#}
+    {#        kickUser: this.inst.kickUser(user_id),#}
+    {#        addRemoveAdmin: this.inst.addRemoveAdmin(user_id),#}
+    {#        showSettings: this.inst.showSettings(),#}
+    {#        changeSettings: this.inst.changeSettings(),#}
+    {#        changeChatName: this.inst.changeChatName(),#}
+    {#        changeChatImage: this.inst.changeChatImage(),#}
+    {#        deleteChat: this.inst.deleteChat('{% url 'delete_chat_url' %}'),#}
+    {#    }#}
+    {# });#}
+    {##}
 </script>
 
 {% endblock %}

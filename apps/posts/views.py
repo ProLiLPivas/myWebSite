@@ -151,6 +151,7 @@ class Create_or_Update_Objects:                 # create new post         LoginR
 
     def post(self, request):
         if (request.POST['is_update']) == 'true':
+            print(request.POST)
             bound_form = self.model_form(request.POST, instance=Post.objects.get(id=request.POST['post_id']))
             if bound_form.is_valid():
                 new_obj = bound_form.save()
@@ -166,6 +167,7 @@ class Create_or_Update_Objects:                 # create new post         LoginR
                 new_obj.save()
                 return JsonResponse(data, status=200)
         else:
+            print(request.POST)
             bound_form = self.model_form(request.POST)
             if bound_form.is_valid():
                 new_obj = bound_form.save(commit=False)

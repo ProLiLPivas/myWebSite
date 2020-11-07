@@ -1,11 +1,21 @@
  {% verbatim %}
-     <div v-for="friend in friends">
-         <div class="card mb-0">
-             <div class="card-body">
-                 <a href=''>{{ friend.user_two }}</a>
-                 <input v-on:click="getParticipantsList(friend)" type="checkbox">
-                 <a class="btn btn-info" href="" style="position: absolute; right: 10px"></a>
+     <div v-if="friends.length !== 0 ">
+         <div v-for="friend in friends">
+             <div class="card mb-0">
+                 <div class="card-body">
+                     <a v-bind:href="friend.url">{{ friend.username }}</a>
+                     <input v-on:click="getParticipantsList(friend)" type="checkbox">
+
+                 </div>
              </div>
+         </div>
+     </div>
+     <div v-else="">
+         <div v-if="chat">
+             all your friends in this chat
+         </div>
+         <div v-else="">
+             u dont have friends to create chat
          </div>
      </div>
  {% endverbatim %}

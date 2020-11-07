@@ -4,7 +4,7 @@
     <div class="row">
         <div class=" col-md-1 col-sm-0"  style="position: absolute; right: 0;">
              <div class="btn-group">
-                 <a href="{% url 'messages_list_url' %}" class="btn btn-light">X</a>
+                 <a href="{% url 'chat_list_url' %}" class="btn btn-light">X</a>
              </div>
         </div>
     </div>
@@ -12,8 +12,6 @@
 
 
 {% block content %}
-
-
     <div id="create_chat">
        {% include 'includes/chat/create_connection_list.html' %}
         <div v-if="is_public">
@@ -68,17 +66,16 @@
                 }else if(this.chosen_friends.length > 1){
                     this.is_public = true;
                 }
+                console.log(this.chosen_friends)
             },
-            makeNewChat: function (is_add=false) {
+            makeNewChat: function () {
                 var formData = new FormData();
-                if(this.chat_name || !this.is_public){
+                if(this.chat_name && this.is_public){
                     formData.append('chat_name', this.chat_name)
-                }else{return}
-                friends = this.chosen_friends.map(friend =>{ return friend.user_two });
+                }
+                friends = this.chosen_friends.map(friend =>{ return friend.id });
                 formData.append('is_public', this.is_public);
                 formData.append('friends', friends);
-                console.log(friends);
-                console.log(formData);
                 url = '{% url 'create_chat_url' %}';
                 var a = makeAjaxRequest('post', url, formData)
             },
