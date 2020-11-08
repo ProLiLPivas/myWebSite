@@ -22,8 +22,10 @@
              {% include 'includes/posts/post_template.html' %}
         </div>
 
+    </div>
 
-        <script>
+
+    <script>
             function makeAjaxRequest(method, url, data=null){
                 return axios({
                     method: method,
@@ -37,11 +39,12 @@
                 });
             }
             class Post{
-                constructor(data=null){
+                constructor(data=null, is_likes=false){
                     if(data){
                         this.data = data;
                         this.id = data['id'];
                         this.tags = data['tag'];
+
                     }
                 }
                 id = 0;
@@ -60,8 +63,8 @@
                 show_del = false;
                 tagInput = '';
                 show_tag_input = false;
-                is_liked = false;
                 attachedTags = [];
+
                 //selected_field: null,
             }
 
@@ -81,13 +84,18 @@
                                 return  new Post(post);
                             });
                             this.user = response.data.user;
+
                         });
                 },
                 methods: {
                     // 4 POST
+                    getTagUrl: function(tag){
+                        return 'tag=' + tag + '/'
+                    },
                     attachTag: function (post) {
                         if(post.attachedTags.indexOf(post.tagInput) === -1){
                             post.attachedTags.push(post.tagInput);
+                            post.tagInput = '';
                         }
                     },
                     unattachTag: function(post, index) {
@@ -153,7 +161,7 @@
                         url = '{% url 'like_post_url' %}';
                         var ajax = makeAjaxRequest('post', url, formData);
                         ajax.then(response => {
-                            post.is_liked = response.data.is_liked;
+                            post.data.is_liked = response.data.is_liked;
                             post.data.likes_amount = response.data.amount
                         });
                     },
@@ -245,7 +253,7 @@
                 }
             });
         </script>
-    </div>
+
 
 
 

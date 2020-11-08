@@ -17,12 +17,24 @@ def home_page(request):                     # first blog page
     posts = Post.objects.all()
     return render(request, 'posts/feed.html')# , context={'posts': posts, 'user': request.user})
 
+
+
+
 class GetFeed(View):
     def get(self, request):
         posts = Post.objects.all()
         dict = [model_to_dict(post) for post in posts]
 
         for post in dict:
+            user = User.objects.get(id=post['user'])
+            post['username'] = user.username
+            post['url'] = user.profile.get_absolute_url()
+            like = Like.objects.filter(post=post['id'])
+            if like:
+                if like[0].exist:
+                    post['is_liked'] = True
+            else: post['is_liked'] = False
+
             if post['tag']:
                 tags = []
                 for tag in post['tag']:
@@ -30,9 +42,17 @@ class GetFeed(View):
                     tags.append(m2d)
                 post['tag'] = tags
 
+
+
         return JsonResponse({
             'posts': dict,
-            'user': {'id': request.user.id, 'is_staff': request.user.is_staff}
+            'users': {
+
+            },
+            'user': {
+                'id': request.user.id,
+                'is_staff': request.user.is_staff
+            },
         }, status=200)
 
 def tags_list(request):
@@ -45,9 +65,13 @@ class ReadObjectMixin:
     template = None
 
     def get(self, request, slug):
-        obj = get_object_or_404(self.model , slug__iexact=slug)
+        print(id)
+        if self.model == Tag:
+            obj = get_object_or_404(self.model, slug=slug)
+        else:
+            obj = get_object_or_404(self.model , id=slug)
         return render(request, self.template, context={
-            self.model.__name__.lower(): obj, 'admin_obj': obj, 'read_obj': True
+            self.model.__name__.lower(): obj,
         })
 
 class ReadPost(ReadObjectMixin, View):      # read details about post
@@ -160,14 +184,13 @@ class Create_or_Update_Objects:                 # create new post         LoginR
                 if tags != ['']:
                     t = []
                     for tag in tags:
-                        new_tag = Tag.objects.get_or_create(title=tag.title, slug=tag.title)
+                        new_tag = Tag.objects.get_or_create(title=tag.__str__())
                         new_obj.tag.add(new_tag[0])
                         t.append(model_to_dict(new_tag[0]))
                 data = {'tag': t}
                 new_obj.save()
                 return JsonResponse(data, status=200)
         else:
-            print(request.POST)
             bound_form = self.model_form(request.POST)
             if bound_form.is_valid():
                 new_obj = bound_form.save(commit=False)
@@ -182,7 +205,7 @@ class Create_or_Update_Objects:                 # create new post         LoginR
 
                 t = []
                 for tag in tags:
-                    new_tag = Tag.objects.get_or_create(title=tag.title, slug=tag.title)
+                    new_tag = Tag.objects.get_or_create(title=tag.__str__())
                     new_obj.tag.add(new_tag[0])
                     t.append(model_to_dict(new_tag[0]))
                 m2d = model_to_dict(new_obj)
@@ -226,9 +249,7 @@ class UpdateComment(View):
 
 
 class DeleteObjectMixin:
-    '''
-
-    '''
+    ''' '''
     model = None
 
     def post(self, request):

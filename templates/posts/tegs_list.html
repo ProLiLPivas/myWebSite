@@ -7,7 +7,10 @@
 {%block content %}
     <h1 class="mb-4">Tags: </h1>
     {% for tag in tags %}
-        <h3 class="mb-3">{{ tag.title }}</h3>
-        <a href=" {{ tag.get_absolute_url }}" class="btn btn-primary"> go </a>
+        <div class="row col-12 mb-3">
+            <h3 class=" col-8">{{ tag.title }}</h3>
+            <a href=" {{ tag.get_absolute_url }}" class="btn btn-primary"> </a>
+        </div>
+
     {% endfor %}
 {% endblock %}

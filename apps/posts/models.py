@@ -22,15 +22,8 @@ class Post(models.Model):
     reposts_amount = models.IntegerField(default=0)
     # is_changed = models.BooleanField(default=False, null=True)
 
-
     def get_absolute_url(self):
-        return reverse('read_post_url', kwargs={'slug' : self.slug})
-
-    # def get_update_url(self):
-    #     return reverse('update_post_url', kwargs={'slug': self.slug})
-
-    # def get_delete_url(self):
-    #     return reverse('delete_post_url', kwargs={'slug': self.slug})
+        return reverse('read_post_url', kwargs={'slug': self.id})
 
     def get_comments_url(self):
         return reverse('comment_url', kwargs={'id': self.id})
@@ -49,18 +42,18 @@ class Post(models.Model):
 
 class Tag(models.Model):
     title = models.CharField(max_length=150)
-    slug = models.SlugField(max_length=150, blank=True,)
+    slug = models.SlugField(max_length=150, blank=True)
+
 
     def get_absolute_url(self):
         return reverse('read_tag_url', kwargs={'slug' : self.title})
-    # def get_update_url(self):
-    #     return reverse('update_tag_url', kwargs={'slug': self.slug})
-    # def get_delete_url(self):
-    #     return reverse('delete_tag_url', kwargs={'slug': self.slug})
+
+    def get_related_posts(self):
+        return #self.
 
     def save(self, *args, **kwargs):
         if not self.id:
-            self.slug = generate_slug(self.title)
+            self.slug = self.title
         super().save(*args, **kwargs)
 
     def __str__(self):

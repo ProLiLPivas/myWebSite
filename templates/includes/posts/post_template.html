@@ -3,12 +3,14 @@
     <div class="card mb-4 ">
         <div class="card-header">
             <div class="row">
-                <h4 class="col-8"> {{ post.data.user }} </h4>
-                <div class ="row" style="position: absolute; right: 7px;">
-                    <a href="" class="btn btn-info">read</a>
+                <h4 class="col-8">
+                    <a v-bind:href="post.data.url">{{ post.data.username }}</a>
+                </h4>
+                <div class ="row" style="position: absolute; right: 10px;">
+                    <a href="" class="btn btn-info mr-2">read</a>
                     <div v-if="user.id === post.data.user || user.is_staff">
                         <button v-on:click="showUpdatePost(post)" class="btn btn-info" >🖊</button>
-                        <button v-on:click="post.show_del = true" class="btn btn-danger">❌</button>
+                        <button v-on:click="post.show_del = true" class="btn btn-danger mr-2">❌</button>
                     </div>
                 </div>
             </div>
@@ -18,21 +20,26 @@
             <h4 class="card-title"> {{ post.data.title }}</h4>
             <h6 class="card-text"> {{post.data.body}}</h6>
             <p class="card-text"></p>
-
-                <div v-for="tag in post.tags" class="row">
-                    <a href="">#{{tag.title}}</a>
+            <div class="row ml-2">
+                <div v-for="(tag, index) in post.tags">
+                    <div v-if="index === post.tags.length - 1">
+                        <a class="mr-2" v-bind:href="getTagUrl(tag.title)">#{{tag.title}}</a>
+                    </div>
+                    <div v-else="">
+                        <a class="mr-2" v-bind:href="getTagUrl(tag.title)"> #{{tag.title}},</a>
+                    </div>
                 </div>
+            </div>
 
             <div class="row" >
                     <form @submit.prevent="makeLike(post)">
-                        <div v-if="!post.is_liked">
+                        <div v-if="!post.data.is_liked">
                             <button type="submit" class="btn" ref="like"> {{ post.data.likes_amount }} 💙</button>
                         </div>
                         <div v-else="">
                             <button type="submit" class="btn" ref="like"> {{ post.data.likes_amount }} ❤</button>
                         </div>
                     </form>
-
                     <button class="btn" v-on:click="getComment(post)" ref="comment">
                         {{post.data.comments_amount}} 🗨
                     </button>

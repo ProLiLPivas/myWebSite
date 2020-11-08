@@ -14,9 +14,11 @@
     </p>
     <h5> used tags:</h5>
 
-    {% for tag in post.tag.all %}
-        <h3 class="mb-3">{{ tag.title }}</h3>
-        <a href=" {{ tag.get_absolute_url }}"> {{ tag.slug }} </a>
+    <div class="row">
+        {% for tag in post.tag.all %}
+        <a class="mr-2" href="{{ tag.get_absolute_url }}"> #{{ tag.title }}, </a>
     {% endfor %}
+    </div>
+
 
 {% endblock %}
