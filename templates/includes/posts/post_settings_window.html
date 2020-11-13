@@ -1,0 +1,72 @@
+<transition name="delete-show">
+    {% verbatim %}
+    <div v-if="post.show_settings">
+        <table class="table table-borderless">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">All Users</th>
+                <th scope="col">Only Friends</th>
+                <th scope="col">Only Subs</th>
+                <th scope="col">Nobody</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <th scope="row">see comment permission</th>
+                <td><input value=1 v-model="post.settings.see_comments_permission" type="radio"></td>
+                <td><input value=2 v-model="post.settings.see_comments_permission"  type="radio"></td>
+                <td><input value=3 v-model="post.settings.see_comments_permission"  type="radio"></td>
+                <td><input value=4 v-model="post.settings.see_comments_permission"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">comment permission</th>
+                <td><input value=1 v-model="post.settings.comment_permission" type="radio"></td>
+                <td><input value=2 v-model="post.settings.comment_permission"  type="radio"></td>
+                <td><input value=3 v-model="post.settings.comment_permission"  type="radio"></td>
+                <td><input value=4 v-model="post.settings.comment_permission"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">like permission</th>
+                <td><input value=1 v-model="post.settings.like_permission" type="radio"></td>
+                <td><input value=2 v-model="post.settings.like_permission" type="radio"></td>
+                <td><input value=3 v-model="post.settings.like_permission" type="radio"></td>
+                <td><input value=4 v-model="post.settings.like_permission"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">repost permission</th>
+                <td><input value=1 v-model="post.settings.repost_permission" type="radio"></td>
+                <td><input value=2 v-model="post.settings.repost_permission" type="radio"></td>
+                <td><input value=3 v-model="post.settings.repost_permission" type="radio"></td>
+                <td><input value=4 v-model="post.settings.repost_permission"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">see statistic permission</th>
+                <td><input value=1 v-model="post.settings.see_statistic_permission" type="radio"></td>
+                <td><input value=2 v-model="post.settings.see_statistic_permission" type="radio"></td>
+                <td><input value=3 v-model="post.settings.see_statistic_permission" type="radio"></td>
+                <td><input value=4 v-model="post.settings.see_author_permission"  type="radio"></td>
+            </tr>
+            <tr>
+            <tr>
+                <th scope="row">see author permission</th>
+                <td><input value=1 v-model="post.settings.see_author_permission" type="radio"></td>
+                <td><input value=2 v-model="post.settings.see_author_permission" type="radio"></td>
+                <td><input value=3 v-model="post.settings.see_author_permission" type="radio"></td>
+                <td><input value=4 v-model="post.settings.see_author_permission"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">see post permission</th>
+                <td><input value=1 v-model="post.settings.see_post_permission" type="radio"></td>
+                <td><input value=2 v-model="post.settings.see_post_permission" type="radio"></td>
+                <td><input value=3 v-model="post.settings.see_post_permission" type="radio"></td>
+                <td><input value=4 v-model="post.settings.see_post_permission"  type="radio"></td>
+            </tr>
+            </tbody>
+        </table>
+        <form @submit.prevent="changeSettings(post)">
+            <button class="btn btn-info">apply</button>
+        </form>
+    </div>
+    {% endverbatim %}
+</transition>

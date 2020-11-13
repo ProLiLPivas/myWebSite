@@ -3,11 +3,11 @@ from .views import *
 
 
 urlpatterns = [
-    path('', home_page, name='posts_list_url'),
-    path('post/get', GetFeed.as_view(), name='get_feed_url'),
+    path('', Feed.as_view(), name='feed_url'),
     path('post/create/', CreatePost.as_view(), name='create_post_url'),
     path('post/update/', UpdatePost.as_view(), name='update_post_url'),
     path('post/delete/', DeletePost.as_view(), name='delete_post_url'),
+    path('post/permissions', PostSettings.as_view(), name='settings_post_url'),
     path('post=<int:slug>/', ReadPost.as_view(), name='read_post_url'),
     path('like/', LikePost.as_view(), name='like_post_url'),
 

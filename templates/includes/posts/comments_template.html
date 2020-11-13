@@ -1,7 +1,8 @@
 <transition name="comments-show">
     <div v-if="post.show_comments"   class="card-footer" style="background: white">
         <form  @submit.prevent="postComment(post)">
-            <div class="form-row align-items-center">
+
+            <div v-if="post.data.comment_permission <= post.data.permission" class="form-row align-items-center">
                 <div class="col-sm-11 my-1">
                     <input v-model="post.commentInput" type="text" class="form-control"  placeholder="enter ur text ...">
                 </div>
@@ -17,23 +18,32 @@
         <div v-for="(comment, comment_index) in post.comments">
             <div class="card">
                 <div class="card-body">
-                    <div v-if="post.show_com_upd !== comment_index" class="row">
-                        <div class="col-11">
+                    <div v-if="post.show_com_upd !== comment_index" >
+                        <div class="row">
+                            <a v-bind:href="comment.url">{{ comment.username }}</a>
+                            <div class="row mr-3" style="position: absolute; right: 10px;">
+                                <form @submit.prevent="likeComment(post, comment_index)" class="row">
+                                    <div v-if="comment.is_liked">
+                                        <button type="submit" class="btn mr-3">{{ comment.likes_amount }} ❤️</button>
+                                    </div>
+                                    <div v-else="">
+                                        <button type="submit" class="btn mr-3">{{ comment.likes_amount }} 🖤</button>
+                                    </div>
+                                </form>
+                                <div v-if="comment.user_id === user.id || post.id === user.id || user.is_staff" class="row">
+                                    <button v-on:click="showUpdateComment(post, comment_index)" class="btn">o</button>
+                                    <form @submit.prevent="delComment(post, comment_index)">
+                                        <button type="submit" class="btn">x</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="">
                             {{ comment.text }}
                         </div>
-                        <div class="col-1">
-                            <div v-if="comment.user_id === user.id || post.id === user.id || user.is_staff">
-                                <button v-on:click="showUpdateComment(post, comment_index)" class="btn">o</button>
-                                <form @submit.prevent="delComment(post, comment_index)">
-                                    <button type="submit" class="btn">x</button>
-                                </form>
-                            </div>
-                            <form @submit.prevent="likeComment(post, comment_index)">
-                                <div class="row">
-                                    {{ comment.likes_amount }}
-                                    <button type="submit" class="btn">🖤</button>
-                                </div>
-                            </form>
+                        <div>
+                            <i v-if="comment.is_changed"> upd</i>
+                            <i>{{ comment.time }}</i>
                         </div>
                     </div>
                     <div v-else="">

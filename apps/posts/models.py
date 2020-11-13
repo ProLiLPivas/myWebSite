@@ -11,6 +11,8 @@ def generate_slug(title):
 
 
 class Post(models.Model):
+    PERMISSIONS_TYPES = ((1, 'All Users'), (2, 'Only Subscribers'), (3, 'Only Friends'), (4, 'Nobody'))
+
     title = models.CharField(max_length=150, db_index=True)
     slug = models.SlugField(max_length=150, blank=True, unique=True)
     body = models.TextField(blank=True, db_index=True)
@@ -20,7 +22,17 @@ class Post(models.Model):
     likes_amount = models.IntegerField(default=0)
     comments_amount = models.IntegerField(default=0)
     reposts_amount = models.IntegerField(default=0)
-    # is_changed = models.BooleanField(default=False, null=True)
+
+    is_changed = models.BooleanField(default=False)
+
+    see_comments_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    comment_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    like_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    repost_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    see_statistic_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    see_author_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    see_post_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+
 
     def get_absolute_url(self):
         return reverse('read_post_url', kwargs={'slug': self.id})
@@ -43,13 +55,14 @@ class Post(models.Model):
 class Tag(models.Model):
     title = models.CharField(max_length=150)
     slug = models.SlugField(max_length=150, blank=True)
+    # user = models.ForeignKey(User, blank=True, on_delete=models.CASCADE)
 
 
     def get_absolute_url(self):
         return reverse('read_tag_url', kwargs={'slug' : self.title})
 
-    def get_related_posts(self):
-        return #self.
+    def length(self):
+        return len(Post.objects.filter(tag__id=self.id))
 
     def save(self, *args, **kwargs):
         if not self.id:
@@ -69,6 +82,7 @@ class Comment(models.Model):
     text = models.TextField()
     time = models.TimeField(auto_now_add=True)
     likes_amount = models.IntegerField(default=0)
+    is_changed = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-time']

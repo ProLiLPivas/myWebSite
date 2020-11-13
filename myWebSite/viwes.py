@@ -3,5 +3,5 @@ from django.views import View
 
 
 def redirect_posts(request):
-    return redirect('posts_list_url', permanent=True)
+    return redirect('feed_url', permanent=True)
 

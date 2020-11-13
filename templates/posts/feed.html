@@ -5,7 +5,6 @@
 {% endblock %}
 
 {% block content %}
-
     <div id="start_page">
         <button class="btn btn-primary" v-on:click="startCreatingPost">
             CREATE NEW
@@ -21,10 +20,10 @@
         <div v-for="(post, index) in feed">
              {% include 'includes/posts/post_template.html' %}
         </div>
-
     </div>
 
-
+    {% load static %}
+{#    <script  src="{% static 'js/feedVueApp.js' %}"></script>#}
     <script>
             function makeAjaxRequest(method, url, data=null){
                 return axios({
@@ -35,6 +34,7 @@
                     xsrfHeaderName: 'X-CSRFToken',
                     headers :{
                         'Access-Control-Allow-Origin': '*',
+                        'X-Requested-With':'XMLHttpRequest'
                     },
                 });
             }
@@ -44,9 +44,9 @@
                         this.data = data;
                         this.id = data['id'];
                         this.tags = data['tag'];
-
                     }
                 }
+
                 id = 0;
                 data = [];
                 tags = [];
@@ -55,17 +55,19 @@
 
                 show_comments = null;
                 comments = [];
+                settings = [];
                 commentInput = '';
                 show_com_upd = '';
                 updateInput = '';
                 show_upd = false;
                 show_rep = false;
                 show_del = false;
+                show_settings = false;
+
                 tagInput = '';
                 show_tag_input = false;
                 attachedTags = [];
 
-                //selected_field: null,
             }
 
             new Vue({
@@ -77,7 +79,7 @@
                     user: {},
                 },
                 created(){
-                    url = '{%  url 'get_feed_url' %}';
+                    url = '{%  url 'feed_url' %}';
                     makeAjaxRequest('get', url)
                         .then(response =>{
                             this.feed = response.data.posts.map(function(post){
@@ -88,7 +90,8 @@
                         });
                 },
                 methods: {
-                    // 4 POST
+
+
                     getTagUrl: function(tag){
                         return 'tag=' + tag + '/'
                     },
@@ -112,6 +115,7 @@
                     showUpdatePost: function(post){
                         post.show_upd = !post.show_upd;
                         if(post.show_upd){
+                            post.show_settings = false;
                             post.postTitle = post.data.title;
                             post.postBody = post.data.body;
                             post.attachedTags = post.tags.map(tag =>{ return tag.title});
@@ -133,16 +137,14 @@
                                 post.data.title = post.postTitle;
                                 post.data.body = post.postBody;
                                 post.tags = response.data.tag;
+                                post.data.is_changed = true;
                             }else{
                                 this.show_create = false;
-                                post.data = response.data.post;
+                                post = new Post(response.data.post);
                                 post.id = post.data.id;
                                 post.tags = post.data.tag;
                                 this.feed.unshift(post);
-
                             }
-                            //
-                            //post.tags = response.data.tags
                         });
                     },
                     delPost: function(post_number, id){
@@ -189,12 +191,13 @@
                         var ajax = makeAjaxRequest('post', url, formData);
                         ajax.then(response => {
                             if (post.comments){
-                                post.comments.unshift(response.data.comments);
+                                post.comments.unshift(response.data.comment);
+
                             }else{
-                                post.comments = [response.data.comments];
+                                post.comments = [response.data.comment];
                             }
                             post.commentInput = '';
-                            post.data.comments_amount = response.data.comment_amount ;
+                            post.data.comments_amount = response.data.comment.comments_amount ;
 
                         });
                     },
@@ -205,7 +208,8 @@
                         url = '{% url 'like_comment_url' %}';
                         var ajax = makeAjaxRequest('post', url, formData);
                         ajax.then( response =>{
-                            post.comments[comment_number].likes_amount = response.data.amount
+                            post.comments[comment_number].likes_amount = response.data.amount;
+                            post.comments[comment_number].is_liked = response.data.is_liked;
                         });
                     },
                     delComment: function(post, comment_number){
@@ -239,11 +243,45 @@
                         var ajax = makeAjaxRequest('post', url, formData);
                         ajax.then(response => {
                             post.comments[comment_number].text = post.updateInput;
+                            post.comments[comment_number].is_changed = true;
                             post.show_com_upd = '';
                             post.updateInput = '';
                         });
                     },
+                    showSettings: function(post){
+                        post.show_settings = !post.show_settings;
+                        if(post.settings){
 
+                            post.settings = {
+                                'see_comments_permission': post.data.see_comments_permission,
+                                'comment_permission': post.data.comment_permission,
+                                'like_permission': post.data.like_permission,
+                                'repost_permission': post.data.repost_permission,
+                                'see_statistic_permission': post.data.see_statistic_permission,
+                                'see_author_permission': post.data.see_author_permission,
+                                'see_post_permission': post.data.see_post_permission,
+                            }
+                        }
+                    },
+                    changeSettings: function(post){
+
+                        var formData = new FormData();
+                        formData.append('post_id', post.id);
+                        formData.append('see_comments_permission', post.settings.see_comments_permission);
+                        formData.append('comment_permission', post.settings.comment_permission);
+                        formData.append('like_permission', post.settings['like_permission']);
+                        formData.append('repost_permission', post.settings['repost_permission']);
+                        formData.append('see_statistic_permission', post.settings['see_statistic_permission']);
+                        formData.append('see_author_permission', post.settings['see_author_permission']);
+                        formData.append('see_post_permission', post.settings['see_post_permission']);
+
+                        makeAjaxRequest('post', '{% url 'settings_post_url' %}', formData)
+                            .then(response =>{
+                                post.show_settings = false;
+                                post.show_upd = false;
+                            })
+
+                    },
 
                     // 4 REPOSTS
                     repostGet: function () { },

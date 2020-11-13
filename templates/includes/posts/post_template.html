@@ -31,8 +31,8 @@
                 </div>
             </div>
 
-            <div class="row" >
-                    <form @submit.prevent="makeLike(post)">
+            <div v-if="post.data.see_statistic_permission <= post.data.permission" class="row" >
+                    <form v-if="post.data.like_permission <= post.data.permission" @submit.prevent="makeLike(post)">
                         <div v-if="!post.data.is_liked">
                             <button type="submit" class="btn" ref="like"> {{ post.data.likes_amount }} 💙</button>
                         </div>
@@ -40,18 +40,21 @@
                             <button type="submit" class="btn" ref="like"> {{ post.data.likes_amount }} ❤</button>
                         </div>
                     </form>
-                    <button class="btn" v-on:click="getComment(post)" ref="comment">
+                    <button v-if="post.data.see_comments_permission <= post.data.permission"
+                            class="btn" v-on:click="getComment(post)" ref="comment">
                         {{post.data.comments_amount}} 🗨
                     </button>
                     <button v-on:click="show_repost = !show_repost" type="button" class="btn">{{ post.data.reposts_amount}} ↗</button>
 
                 <div class="" style="position: absolute; right: 10px;">
-                    <i>{{ post.date_publication }}</i>
+                    <i v-if="post.data.is_changed">upd</i>
+                    <i>{{ post.data.date_publication }}</i>
                 </div>
             </div>
         {%  endverbatim %}
             {% include 'includes/posts/comments_template.html' %}
             {% include 'includes/posts/delete_post_window.html' %}
+
 {#            {% include 'includes/posts/repost_window.html' %}#}
         </div>
         <div v-else="">

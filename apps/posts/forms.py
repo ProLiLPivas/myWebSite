@@ -44,3 +44,18 @@ class CommentForm(forms.ModelForm):
     class Meta:
         model = Comment
         fields = ['text']
+
+
+
+class PostSettingsForm(forms.ModelForm):
+    class Meta:
+        model = Post
+        fields = [
+            'see_comments_permission',
+            'comment_permission',
+            'like_permission',
+            'repost_permission',
+            'see_statistic_permission',
+            'see_author_permission',
+            'see_post_permission',
+        ]

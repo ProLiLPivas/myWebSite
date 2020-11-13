@@ -1,47 +1,52 @@
 <div class="card-text">
+    <button v-on:click="showSettings(post)" class="btn">⚙</button>
+    {% include 'includes/posts/post_settings_window.html' %}
     {% verbatim %}
-    <input v-model="post.postTitle" class="form-control">
-    <textarea v-model="post.postBody" class="form-control" rows="5">{{ post.postBody }}</textarea>
-    <div v-if="post.tags">
-        <div v-for="(tag, indexTag) in post.attachedTags">
-            <div class="card col-6">
-                <div  class="card-body">
-                    <div class="row">
-                        <div class="col-10">
-                            #{{ tag }}
-                        </div>
-                        <div class="col-1">
-                            <button  class="btn" v-on:click="unattachTag(post, indexTag)">x</button>
+    <div v-if="!post.show_settings">
+        <input v-model="post.postTitle" class="form-control">
+        <textarea v-model="post.postBody" class="form-control" rows="5">{{ post.postBody }}</textarea>
+        <div v-if="post.tags">
+            <div v-for="(tag, indexTag) in post.attachedTags">
+                <div class="card col-6">
+                    <div  class="card-body">
+                        <div class="row">
+                            <div class="col-10">
+                                #{{ tag }}
+                            </div>
+                            <div class="col-1">
+                                <button  class="btn" v-on:click="unattachTag(post, indexTag)">x</button>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    {% endverbatim %}
 
-    <transition>
-        <div v-if="post.show_tag_input">
-            <div class="row col-8">
-                <input v-model="post.tagInput" class="form-control mb-2 mt-2 col-6">
-                <button class="btn btn-info" v-on:click="attachTag(post)">add</button>
+
+        <transition>
+            <div v-if="post.show_tag_input">
+                <div class="row col-8">
+                    <input v-model="post.tagInput" class="form-control mb-2 mt-2 col-6">
+                    <button class="btn btn-info" v-on:click="attachTag(post)">add</button>
+                </div>
             </div>
-        </div>
-    </transition>
+        </transition>
 
-    <button class="btn btn-light mt-2" v-on:click="post.show_tag_input = !post.show_tag_input">
-        <STRONG>+</STRONG>
-    </button>
-    <div v-if="post.id !==0">
-        <form @submit.prevent="create_or_updatePost(post, true)">
-        <button type="submit" class="btn btn-primary mt-2 mb-2">Update</button>
-        </form>
+        <button class="btn btn-light mt-2" v-on:click="post.show_tag_input = !post.show_tag_input">
+            <STRONG>+</STRONG>
+        </button>
+        <div v-if="post.id !==0">
+            <form @submit.prevent="create_or_updatePost(post, true)">
+            <button type="submit" class="btn btn-primary mt-2 mb-2">Update</button>
+            </form>
+        </div>
+        <div v-else="">
+            <form @submit.prevent="create_or_updatePost(post)">
+                <button type="submit" class="btn btn-primary mt-2 mb-2">Create</button>
+            </form>
+        </div>
     </div>
-    <div v-else="">
-        <form @submit.prevent="create_or_updatePost(post)">
-            <button type="submit" class="btn btn-primary mt-2 mb-2">Create</button>
-        </form>
-    </div>
+   {% endverbatim %}
 
 </div>
