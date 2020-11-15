@@ -67,6 +67,7 @@
                                  </h6>
                                  <h6 class="card-text">{{ message.text }}</h6>
                                  <h6>{{ message.date_pub_time }}</h6>
+                                 <i v-if="message.is_changed"> upd</i>
                                  <button v-on:click="selectMessage(index)" type="button" class="btn"><small>o</small></button>
                                     <div v-if="chosenMessages.indexOf(messages[index]) !== -1 ">Q</div> {# !!! remove !!! #}
                                 </div>
@@ -82,6 +83,7 @@
                                     <a v-bind:href='users[message.from_user].url'>{{ users[message.from_user].username}}</a>
                                     <p class="card-text">{{ message.text }}</p>
                                     <h6>{{ message.time }}</h6>
+                                    <i v-if="message.is_changed"> upd</i>
                                     <button v-on:click="selectMessage(index)" class="btn"><small>o</small></button>
                                     <div v-if="chosenMessages.indexOf(messages[index]) !== -1 ">Q</div> {# !!! remove !!! #}
                               </div>
@@ -178,7 +180,7 @@
                 .then(response => {
                     this.messages = response.data.messages;
                     this.chat = response.data.chat;
-                    if(chat.is_public){
+                    if(this.chat.is_public){
                         response.data.users.forEach(user => {
                             this.users[user.id] = user;
                             if(user.id === this.user.id){this.user = user;}
@@ -193,6 +195,7 @@
                             }
                         });
                     }
+                   window.scrollTo(0, document.documentElement.scrollHeight);
                 });
         },
         methods:{
@@ -241,6 +244,7 @@
                 var ajax = makeAjaxRequest('post', url, formData);
                 ajax.then(response => {
                     this.messages[this.messages.indexOf(this.chosenMessages[0])].text = this.updateInput;
+                    this.messages[this.messages.indexOf(this.chosenMessages[0])].is_changed = true;
                     this.chosenMessages = [];
                     this.updateInput = '';
                 })
@@ -336,31 +340,39 @@
             },
 
             showSettings: function(){
-                this.settings['see_messages'] = this.chat.see_messages;
-                this.settings['send_messages'] = this.chat.send_messages;
-                this.settings['del_messages'] = this.chat.del_messages;
-                this.settings['add_new_users'] = this.chat.add_new_users;
-                this.settings['remove_users'] = this.chat.remove_users;
-                this.settings['add_remove_admins'] = this.chat.add_remove_admins;
-                this.settings['see_admins'] = this.chat.see_admins;
-                this.settings['change_chat_name'] = this.chat.change_chat_name;
-                this.settings['change_chat_image'] = this.chat.change_chat_image;
+                this.show_settings = !this.show_settings;
+                this.show_add_new = false;
+                if (this.show_settings){
+                     this.settings = {
+                        'see_messages': this.chat.see_messages,
+                        'send_messages': this.chat.send_messages,
+                        'del_messages': this.chat.del_messages,
+                        'add_new_users': this.chat.add_new_users,
+                        'remove_users': this.chat.remove_users,
+                        'add_remove_admins': this.chat.add_remove_admins,
+                        'see_admins': this.chat.see_admins,
+                        'change_chat_name': this.chat.change_chat_name,
+                        'change_chat_image': this.chat.change_chat_image,
+                    };
+                }
             },
-
-            changeSettings: function(){
+            changeSettings: function(post) {
                 var formData = new FormData();
                 formData.append('changes', 'settings');
                 formData.append('chat_id', this.chat.id);
-
-                formData.append('see_messages', this.settings['see_messages']);
-                formData.append('send_messages', this.settings['send_messages']);
-                formData.append('del_messages', this.settings['del_messages']);
-                formData.append('add_new_users', this.settings['add_new_users']);
-                formData.append('remove_users', this.settings['remove_users']);
+                formData.append('see_messages', post.settings['see_messages']);
+                {#formData.append('send_messages', this.settings['send_messages']);#}
+                formData.append('del_messages', post.settings['del_messages']);
+                formData.append('add_new_users', post.settings['add_new_users']);
+                formData.append('remove_users', post.settings['remove_users']);
                 formData.append('add_remove_admins', this.settings['add_remove_admins']);
                 formData.append('see_admins', this.settings['see_admins']);
                 formData.append('change_chat_name', this.settings['change_chat_name']);
                 formData.append('change_chat_image', this.settings['change_chat_image']);
+                makeAjaxRequest('post', this.url, formData)
+                    .then(response => {
+                        this.show_settings = false;
+                    })
             },
             changeChatName: function () {
                 var formData = new FormData();

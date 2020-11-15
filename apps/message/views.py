@@ -138,7 +138,7 @@ class CreateChat(View):
                 creator_connection = ChatUtils.generate_connections(user=request.user, recipient=int(friends[0]))
 
         creator_connection.chat.create_last_message(str(request.user.username) + ' star chat')
-        return redirect(creator_connection.get_chat_url())
+        return redirect(creator_connection.get_chat_url(),  permanent=True)
 
 
 

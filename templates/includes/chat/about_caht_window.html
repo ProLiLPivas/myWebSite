@@ -17,12 +17,12 @@
                         </div>
                     </div>
                     <div class="row">
-                        <button v-on:click="show_settings = !show_settings; show_add_new = false" class="btn">o</button>
+                        <button v-on:click="showSettings" class="btn">o</button>
                         <button v-if="user.role >= chat.add_new_users" v-on:click="show_add_newUser" class="btn">+</button>
                         <button v-on:click="show_window = false; show_add_new = false; show_settings = false;"
                                 class="btn">x</button>
                     </div>
-                    <br>
+
                     <div v-if="show_change_input && user.role >= chat.change_chat_name" class="row col-12 mb-2">
                         <input v-model="change_chat_name_Input" class="col-9 form-control mr-1">
                         <button v-on:click="changeChatName" class="btn btn-primary col-2">change</button>

@@ -5,6 +5,8 @@ from django.urls import reverse
 
 
 class Chat(models.Model):
+    PERMISSIONS_TYPES = ((1, 'All Users'), (2, 'Only Admins'),(3, 'Nobody'))
+
     message_amount = models.IntegerField(default=0)
     user_amount = models.IntegerField(default=0)
     is_public = models.BooleanField(default=False)
@@ -12,15 +14,15 @@ class Chat(models.Model):
     chat_image = models.ImageField(blank=True, null=True)
     last_message_id = models.IntegerField(null=True)
     # settings
-    see_messages = models.IntegerField(default=1)
-    send_messages = models.IntegerField(default=1)
-    del_messages = models.IntegerField(default=2)
-    add_new_users = models.IntegerField(default=1)
-    remove_users = models.IntegerField(default=2)
-    add_remove_admins = models.IntegerField(default=3)
-    see_admins = models.IntegerField(default=1)
-    change_chat_name = models.IntegerField(default=2)
-    change_chat_image = models.IntegerField(default=2)
+    see_messages = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    send_messages = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    del_messages = models.IntegerField(choices=PERMISSIONS_TYPES, default=2)
+    add_new_users = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    remove_users = models.IntegerField(choices=PERMISSIONS_TYPES, default=2)
+    add_remove_admins = models.IntegerField(choices=PERMISSIONS_TYPES, default=3)
+    see_admins = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    change_chat_name = models.IntegerField(choices=PERMISSIONS_TYPES, default=2)
+    change_chat_image = models.IntegerField(choices=PERMISSIONS_TYPES, default=2)
 
 
     def get_last_message(self):
@@ -54,3 +56,4 @@ class Message(models.Model):
     text = models.TextField(blank=True, db_index=True)
     is_seen = models.BooleanField(default=False)
     is_ancillary = models.BooleanField(default=False)
+    is_changed = models.BooleanField(default=False)

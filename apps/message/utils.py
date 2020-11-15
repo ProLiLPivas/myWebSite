@@ -30,7 +30,9 @@ class MessageUtils:
         bound_form = MessageUpdateForm(data, instance=instance)
         if bound_form.is_valid():
             if int(user) == instance.from_user.id:
-                message = bound_form.save()
+                message = bound_form.save(commit=False)
+                message.is_changed = True
+                message.save()
                 return message
             return None
 
@@ -40,7 +42,7 @@ class MessageUtils:
         chat_id = int(data['chat'])
         data_dict = {
             'text': data['text'],
-            'is_ancillary': data['is_ancillary'][0] == 'true',
+            'is_ancillary': data['is_ancillary'] == 'true',
             'chat': chat_id,
             'from_user': user
         }
@@ -95,6 +97,7 @@ class ChatUtils:
                 username = last_msg.from_user.username
 
             chats_dict.append({
+                'id': connection.chat.id,
                 'name': name,
                 'user_url': user_url,
                 'url': connection.get_chat_url(),
@@ -103,11 +106,6 @@ class ChatUtils:
                 'last_message_user': username,
             })
         return chats_dict
-
-
-
-
-
 
     @staticmethod
     def generate_data_to_create_chat(user):
@@ -231,10 +229,12 @@ class ChatChanges():
 
     def changeSettings(self,request):
         chat, con = ChatUtils.get_chat_and_connection(request.POST['chat_id'], request.user)
+
         bound_form = ChatSettingsForm(request.POST, instance=chat)
+        print(bound_form.errors)
 
         if bound_form.is_valid() and con.role == 3:
             bound_form.save()
-            return JsonResponse({'chat': bound_form})
+            return JsonResponse({'is_changes': 'ok'}, status=200)
         else:
-            return HttpResponse(status=403)
+            return HttpResponse(status=418)

@@ -1,6 +1,10 @@
 <transition>
+    {% verbatim %}
     <div v-if="show_settings">
         <div>
+            <form @submit.prevent="changeSettings">
+                <button class="btn btn-info">apply</button>
+            </form>
             <table class="table table-borderless">
               <thead>
                 <tr>
@@ -11,57 +15,59 @@
                 </tr>
               </thead>
               <tbody>
+
                 <tr>
                   <th scope="row">see messages</th>
-                  <td><input value=1 v-model="settings['see_messages']" type="checkbox" ></td>
-                  <td><input value=2 v-model="settings['see_messages']"  type="checkbox" ></td>
-                  <td><input value=3 v-model="settings['see_messages']"  type="checkbox" ></td>
+                  <td><input value=1 v-model="settings.see_messages" type="radio"></td>
+                  <td><input value=2 v-model="settings.see_messages"  type="radio"></td>
+                  <td><input value=3 v-model="settings.see_messages"  type="radio"></td>
                 </tr>
                 <tr>
-                  <th scope="row">send messages</th>
-                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
-                </tr>
-                <tr>
-                  <th scope="row">add new users</th>
-                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                  <th scope="row">del messages</th>
+                  <td><input value=1 v-model="settings.del_messages" type="radio"></td>
+                  <td><input value=2 v-model="settings.del_messages" type="radio"></td>
+                  <td><input value=3 v-model="settings.del_messages" type="radio"></td>
                 </tr>
                 <tr>
                   <th scope="row">remove users</th>
-                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=1 v-model="settings.remove_users" type="radio"></td>
+                  <td><input value=2 v-model="settings.remove_users" type="radio"></td>
+                  <td><input value=3 v-model="settings.remove_users" type="radio"></td>
                 </tr>
                 <tr>
+                  <th scope="row">add new users</th>
+                  <td><input value=1 v-model="settings.add_new_users" type="radio"></td>
+                  <td><input value=2 v-model="settings.add_new_users" type="radio"></td>
+                  <td><input value=3 v-model="settings.add_new_users" type="radio"></td>
+                </tr>
+                <tr>
+                <tr>
                   <th scope="row">add/remove admins</th>
-                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=1 v-model="settings.add_remove_admins" type="radio"></td>
+                  <td><input value=2 v-model="settings.add_remove_admins" type="radio"></td>
+                  <td><input value=3 v-model="settings.add_remove_admins" type="radio"></td>
                 </tr>
                 <tr>
                   <th scope="row">see admins</th>
-                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=1 v-model="settings.see_admins" type="radio"></td>
+                  <td><input value=2 v-model="settings.see_admins" type="radio"></td>
+                  <td><input value=3 v-model="settings.see_admins" type="radio"></td>
                 </tr>
                  <tr>
                   <th scope="row">change chat name</th>
-                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=1 v-model="settings.change_chat_name" type="radio" ></td>
+                  <td><input value=2 v-model="settings.change_chat_name" type="radio"></td>
+                  <td><input value=3 v-model="settings.change_chat_name" type="radio"></td>
                 </tr>
                  <tr>
                   <th scope="row">change chat image</th>
-                  <td><input value=1 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=2 v-model="settings['see_messages']" type="checkbox"></td>
-                  <td><input value=3 v-model="settings['see_messages']" type="checkbox"></td>
+                  <td><input value=1 v-model="settings.change_chat_image" type="radio"></td>
+                  <td><input value=2 v-model="settings.change_chat_image" type="radio"></td>
+                  <td><input value=3 v-model="settings.change_chat_image" type="radio"></td>
                 </tr>
               </tbody>
             </table>
-            <button v-on:click="changeSettings" class="btn btn-info">apply</button>
         </div>
     </div>
+    {%  endverbatim %}
 </transition>

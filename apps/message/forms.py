@@ -21,7 +21,7 @@ class ChatSettingsForm(forms.ModelForm):
         model = Chat
         fields = [
             'see_messages',
-            'send_messages',
+            # 'send_messages',
             'del_messages',
             'add_new_users',
             'remove_users',
