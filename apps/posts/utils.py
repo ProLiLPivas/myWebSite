@@ -12,12 +12,14 @@ class PostUtils:
     def create_post(data, user):
         bound_form = PostForm(data)
         if bound_form.is_valid():
+
             new_post = bound_form.save(commit=False)
             new_post.user = user
             profile = user.profile
             profile.posts += 1
             profile.save()
             new_post.save()
+
             return new_post
 
     @staticmethod
@@ -32,15 +34,17 @@ class PostUtils:
         return tags_dict
 
     @staticmethod
-    def update_post(data, post_id):
+    def update_post(data, post_id, user):
         post = Post.objects.get(id=post_id)
-        bound_form = PostForm(data, instance=post)
+        if post.user == user:
+            bound_form = PostForm(data, instance=post)
 
-        if bound_form.is_valid():
-            new_obj = bound_form.save()
-            new_obj.is_changed = True
-            new_obj.save()
-            return  new_obj
+            if bound_form.is_valid():
+                new_obj = bound_form.save()
+                new_obj.is_changed = True
+                new_obj.save()
+                return  new_obj, 200
+        return None, 403
 
     @staticmethod
     def del_post(id , user):
@@ -175,6 +179,13 @@ class PostSerializer:
                                 post_dict['is_liked'] = True
                         else:
                             post_dict['is_liked'] = False
+                    # if post.like_permission <= permission:
+                    #     post_dict['is_liked'] = False
+                    #     post_dict['likes_amount'] = 0
+                    # if post.comment_permission <= permission:
+                    #     post_dict['comments_amount'] = 0
+                    # if post.repost_permission <= permission:
+                    #     post_dict['reposts_amount'] = 0
                 else:
                     post_dict['is_liked'] = False
                     post_dict['likes_amount'] = 0

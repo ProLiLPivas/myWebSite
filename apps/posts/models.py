@@ -22,13 +22,13 @@ class Post(models.Model):
     likes_amount = models.IntegerField(default=0)
     comments_amount = models.IntegerField(default=0)
     reposts_amount = models.IntegerField(default=0)
-
     is_changed = models.BooleanField(default=False)
+
 
     see_comments_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
     comment_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
     like_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    repost_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    repost_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1,)
     see_statistic_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
     see_author_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
     see_post_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
@@ -57,7 +57,6 @@ class Tag(models.Model):
     slug = models.SlugField(max_length=150, blank=True)
     # user = models.ForeignKey(User, blank=True, on_delete=models.CASCADE)
 
-
     def get_absolute_url(self):
         return reverse('read_tag_url', kwargs={'slug' : self.title})
 
@@ -83,6 +82,7 @@ class Comment(models.Model):
     time = models.TimeField(auto_now_add=True)
     likes_amount = models.IntegerField(default=0)
     is_changed = models.BooleanField(default=False)
+
 
     class Meta:
         ordering = ['-time']

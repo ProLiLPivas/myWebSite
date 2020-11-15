@@ -45,7 +45,7 @@
                 <td><input value=1 v-model="post.settings.see_statistic_permission" type="radio"></td>
                 <td><input value=2 v-model="post.settings.see_statistic_permission" type="radio"></td>
                 <td><input value=3 v-model="post.settings.see_statistic_permission" type="radio"></td>
-                <td><input value=4 v-model="post.settings.see_author_permission"  type="radio"></td>
+                <td><input value=4 v-model="post.settings.see_statistic_permission"  type="radio"></td>
             </tr>
             <tr>
             <tr>
@@ -64,9 +64,13 @@
             </tr>
             </tbody>
         </table>
-        <form @submit.prevent="changeSettings(post)">
-            <button class="btn btn-info">apply</button>
+         <form v-if="post.id !== 0" @submit.prevent="changeSettings(post)">
+            <button class="btn btn-info mb-3 ml-2">apply</button>
         </form>
+
+        <button v-else="" v-on:click="setSettings(post)" class="btn btn-info mb-3 ml-2">
+            set permission settings
+        </button>
     </div>
     {% endverbatim %}
 </transition>

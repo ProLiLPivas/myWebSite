@@ -1,4 +1,6 @@
-{% extends 'base.html' %}
+{#{% extends 'base.html' %}#}
+{% extends 'posts/feed.html' %}
+
 
 {%block title %}
     {{ post.title }}
@@ -9,7 +11,7 @@
     {% for tag in tags %}
         <div class="row col-12 mb-3">
             <h3 class=" col-8">{{ tag.title }}</h3>
-            <a href=" {{ tag.get_absolute_url }}" class="btn btn-primary"> </a>
+            <a href=" {{ tag.get_absolute_url }}" class="btn btn-primary"> {{ tag.length }}</a>
         </div>
 
     {% endfor %}

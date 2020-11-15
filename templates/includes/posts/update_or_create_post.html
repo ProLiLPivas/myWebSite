@@ -36,13 +36,13 @@
         <button class="btn btn-light mt-2" v-on:click="post.show_tag_input = !post.show_tag_input">
             <STRONG>+</STRONG>
         </button>
-        <div v-if="post.id !==0">
-            <form @submit.prevent="create_or_updatePost(post, true)">
+        <div v-if="post.id !== 0">
+            <form @submit.prevent="updatePost(post)">
             <button type="submit" class="btn btn-primary mt-2 mb-2">Update</button>
             </form>
         </div>
         <div v-else="">
-            <form @submit.prevent="create_or_updatePost(post)">
+            <form @submit.prevent="createPost(post)">
                 <button type="submit" class="btn btn-primary mt-2 mb-2">Create</button>
             </form>
         </div>

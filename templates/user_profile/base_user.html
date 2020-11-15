@@ -1,21 +1,20 @@
-{% extends 'base.html ' %}
+{% extends 'posts/feed.html ' %}
 
 
-{% block content%}
-    {% block image %}
+
+{% block  posts %}
+        <h3> sme posts... bla bla bla</h3>>
+{% endblock %}
+
+{% block image %}
         <p>here gonna be image</p>
     {% endblock %}
 
 
-    {% block  stats %}
+{% block  stats %}
         <p class="mb-5"> posts </p>
         <p class="mb-5"> subs </p>
         <p class="mb-5"> friends </p>
         <p class="mb-5"> subscribers </p>
         <p class="mb-5"> about </p>
-    {% endblock %}
-
-    {% block  posts %}
-        <h3> sme posts... bla bla bla</h3>>
-    {% endblock %}
 {% endblock %}

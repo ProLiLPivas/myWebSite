@@ -41,10 +41,20 @@ class ReadTeg(FeedMixin, View):
     template = 'posts/read_tag.html'
 
 
-class ReadPost(FeedMixin, View):  # read details about post
-    slug = None
-    model = Post.objects.filter(id=1)
+class ReadPost(View):  # read details about post
+
     template = 'posts/read_post.html'
+
+    def get(self, request, slug):  # feed # only friends # popular   # all
+        pass
+        # if request.is_ajax():
+        #     posts = Post.objects.filter(id=slug)
+        #     print(posts)
+        #     feed_dict = PostSerializer.feed_to_dict(posts, request.user)
+        #     users_dict = {'id': request.user.id, 'is_staff': request.user.is_staff}
+        #     return JsonResponse({'posts': feed_dict, 'user': users_dict, }, status=200)
+        #
+        # return render(request, self.template)
 
     # posts = Post.objects.filter(user=request.user)  # for my profile
     # q = Q(user__id=2) | Q(user__id=5)
@@ -121,9 +131,9 @@ class UpdatePost(View):
     model_form = PostForm
 
     def post(self, request):
-        updated_post = PostUtils.update_post(request.POST, request.POST['post_id'])
+        updated_post, status = PostUtils.update_post(request.POST, request.POST['post_id'], request.user)
         tags = PostUtils.create_or_get_tags(request.POST['tags'], updated_post)
-        return JsonResponse({'tag': tags}, status=200)
+        return JsonResponse({'tag': tags}, status=status)
 
 
 class DeletePost(LoginRequiredMixin, View):
@@ -138,6 +148,10 @@ class PostSettings(View):
     def post(self, request):
         http_status = PostUtils.set_post_permissions(request.POST, request.user)
         return HttpResponse(status=http_status)
+
+
+# class Repost(View):
+#     pass
 
 # class DeleteTag(LoginRequiredMixin, DeleteObjectMixin, View):
 #     model = Tag

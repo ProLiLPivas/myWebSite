@@ -11,7 +11,6 @@
         </button>
         <div v-if="show_create">
             <div v-for="post in newPost">
-
                {%  include 'includes/posts/update_or_create_post.html' %}
             </div>
         </div>
@@ -59,10 +58,16 @@
                 commentInput = '';
                 show_com_upd = '';
                 updateInput = '';
+                repostInput = '';
                 show_upd = false;
-                show_rep = false;
                 show_del = false;
                 show_settings = false;
+
+                show_repost = false;
+                repost_type = 0;
+
+                chats4repost = [];
+                selected2repost = [];
 
                 tagInput = '';
                 show_tag_input = false;
@@ -107,7 +112,14 @@
                     startCreatingPost: function(){
                         this.show_create = !this.show_create;
                         if(this.show_create){
-                            this.newPost = [new Post()]
+                            this.newPost = [new Post()];
+                            this.newPost[0].data.see_comments_permission = 1;
+                            this.newPost[0].data.comment_permission = 1;
+                            this.newPost[0].data.like_permission = 1;
+                            this.newPost[0].data.repost_permission = 1;
+                            this.newPost[0].data.see_statistic_permission = 1;
+                            this.newPost[0].data.see_author_permission = 1;
+                            this.newPost[0].data.see_post_permission = 1;
                         }else {
                             this.newPost = null
                         }
@@ -121,31 +133,43 @@
                             post.attachedTags = post.tags.map(tag =>{ return tag.title});
                         }
                     },
-                    create_or_updatePost: function (post, is_update=false) {
+                    createPost: function(post){
                         var formData = new FormData();
                         formData.append('title', post.postTitle);
                         formData.append('body', post.postBody);
                         formData.append('tags', post.attachedTags);
-                        formData.append('is_update', is_update);
                         formData.append('post_id', post.id);
-                        if(is_update){url = '{% url 'update_post_url' %}'}
-                        else {url = '{% url 'create_post_url' %}'}
+                        formData = this.fromSettingsData(formData, post);
+
+                        url = '{% url 'create_post_url' %}';
                         var ajax = makeAjaxRequest('post', url , formData);
                         ajax.then(response =>{
-                            if(is_update){
-                                post.show_upd = false;
-                                post.data.title = post.postTitle;
-                                post.data.body = post.postBody;
-                                post.tags = response.data.tag;
-                                post.data.is_changed = true;
-                            }else{
-                                this.show_create = false;
-                                post = new Post(response.data.post);
-                                post.id = post.data.id;
-                                post.tags = post.data.tag;
-                                this.feed.unshift(post);
+                            this.show_create = false;
+                            new_post = new Post(response.data.post);
+                            new_post.id = new_post.data.id;
+                            new_post.tags = new_post.data.tag;
+                            new_post.settings = post.settings;
+                            if(new_post.settings.length !== 0){
+                                this.changeSettings(new_post);
                             }
+                            this.feed.unshift(new_post);
                         });
+                    },
+                    updatePost: function(post){
+                        var formData = new FormData();
+                        formData.append('title', post.postTitle);
+                        formData.append('body', post.postBody);
+                        formData.append('tags', post.attachedTags);
+                        formData.append('post_id', post.id);
+                        url = '{% url 'update_post_url' %}';
+                        var ajax = makeAjaxRequest('post', url , formData);
+                         ajax.then(response =>{
+                             post.show_upd = false;
+                             post.data.title = post.postTitle;
+                             post.data.body = post.postBody;
+                             post.tags = response.data.tag;
+                             post.data.is_changed = true;
+                         });
                     },
                     delPost: function(post_number, id){
                         var formData = new FormData();
@@ -248,10 +272,10 @@
                             post.updateInput = '';
                         });
                     },
-                    showSettings: function(post){
+
+                    showSettings: function( post){
                         post.show_settings = !post.show_settings;
                         if(post.settings){
-
                             post.settings = {
                                 'see_comments_permission': post.data.see_comments_permission,
                                 'comment_permission': post.data.comment_permission,
@@ -263,31 +287,44 @@
                             }
                         }
                     },
+                    fromSettingsData: function(dataInstance, post){
+                        dataInstance.append('post_id', post.id);
+
+                        dataInstance.append('see_comments_permission', post.settings.see_comments_permission);
+                        dataInstance.append('comment_permission', post.settings.comment_permission);
+                        dataInstance.append('like_permission', post.settings.like_permission);
+                        dataInstance.append('repost_permission', post.settings.repost_permission);
+                        dataInstance.append('see_statistic_permission', post.settings.see_statistic_permission);
+                        dataInstance.append('see_author_permission', post.settings.see_author_permission);
+                        dataInstance.append('see_post_permission', post.settings.see_post_permission);
+                        return dataInstance;
+                    },
+
+
+
                     changeSettings: function(post){
-
-                        var formData = new FormData();
-                        formData.append('post_id', post.id);
-                        formData.append('see_comments_permission', post.settings.see_comments_permission);
-                        formData.append('comment_permission', post.settings.comment_permission);
-                        formData.append('like_permission', post.settings['like_permission']);
-                        formData.append('repost_permission', post.settings['repost_permission']);
-                        formData.append('see_statistic_permission', post.settings['see_statistic_permission']);
-                        formData.append('see_author_permission', post.settings['see_author_permission']);
-                        formData.append('see_post_permission', post.settings['see_post_permission']);
-
+                        formData = new FormData();
+                        formData = this.fromSettingsData(formData, post);
                         makeAjaxRequest('post', '{% url 'settings_post_url' %}', formData)
                             .then(response =>{
-                                post.show_settings = false;
                                 post.show_upd = false;
+                                this.setSettings(post)
                             })
-
+                    },
+                    setSettings: function(post){
+                        post.show_settings = false;
+                        post.data.see_comments_permission = post.settings.see_comments_permission;
+                        post.data.comment_permission =  post.settings.comment_permission;
+                        post.data.like_permission = post.settings.like_permission;
+                        post.data.repost_permission = post.settings.repost_permission;
+                        post.data.see_statistic_permission = post.settings.see_statistic_permission;
+                        post.data.see_author_permission = post.settings.see_author_permission;
+                        post.data.see_post_permission = post.settings.see_post_permission;
                     },
 
                     // 4 REPOSTS
-                    repostGet: function () { },
-                    getChats: function () { },
-                    repostToChat: function () { },
-                    repostToWall: function () { },
+
+
                 }
             });
         </script>
