@@ -1,6 +1,5 @@
 from django import forms
 
-from apps.relations.models import Relations
 from .models import *
 
 

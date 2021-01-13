@@ -1,8 +1,8 @@
 from django.db.models import Q
 from django.forms import model_to_dict
 
-from apps.user_profile.models import *
-from apps.relations.models import *
+
+from apps.user_profile.models import Profile, UsersRelation
 from apps.posts.forms import *
 
 
@@ -142,7 +142,7 @@ class PostUtils:
     def get_permission(post, user):
         if post.user == user:
             return 4
-        rel = Relations.objects.get_or_create(user_one=post.user.profile, user_two=user.profile)
+        rel = UsersRelation.objects.get_or_create(main_user=post.user.profile, secondary_user=user.profile)
         rel = rel[0]
         if rel.is_friends:
             return 3

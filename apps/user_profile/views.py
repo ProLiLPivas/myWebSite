@@ -1,22 +1,20 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.urls import reverse
 from django.views import View
 from apps.posts.models import Post
-from apps.relations.models import Relations
-from .models import Profile
+from .models import Profile, UsersRelation
 
 
 class UserProfile(View):
     model = Profile
     template = 'user_profile/get_user.html'
 
-    def get_relations_status(self, rel : Relations, ):
+    def get_relations_status(self, relation: UsersRelation):
 
-        if rel.is_friends:
+        if relation.is_friends:
             return 3
-        elif rel.is_subscribed:
+        elif relation.is_subscribed:
             return 2
-        elif rel.is_block: # if u blocked u cant see of do any anything with profile, cant messaging, cant add 2 friend
+        elif relation.is_block: # if u blocked u cant see of do any anything with profile, cant messaging, cant add 2 friend
             return 0
         else:
             return 1
@@ -37,8 +35,8 @@ class UserProfile(View):
                 user1 = Profile.objects.get(user=request.user)
                 user2 = Profile.objects.get(user=profile.user_id)
 
-                relations = Relations.objects.get(user_one=user1, user_two=user2)
-                relations2 = Relations.objects.get(user_one=user2, user_two=user1)
+                relations = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
+                relations2 = UsersRelation.objects.get(main_user=user2, secondary_user=user1)
 
                 return render(request, self.template, context={
                     self.model.__name__.lower(): profile ,
@@ -48,11 +46,11 @@ class UserProfile(View):
                     'relations2': relations2,
                     'status': self.get_relations_status(relations)
                 })
-            except Relations.DoesNotExist:
+            except UsersRelation.DoesNotExist:
                 user1 = Profile.objects.get(user=request.user)
                 user2 = Profile.objects.get(user=profile.user_id)
-                relation = Relations(user_one=user1, user_two=user2)
-                relation2 = Relations(user_one=user2, user_two=user1)
+                relation = UsersRelation(main_user=user1, secondary_user=user2)
+                relation2 = UsersRelation(main_user=user2, secondary_user=user1)
 
                 r = relation.save()
                 r2 = relation2.save()
@@ -101,7 +99,7 @@ def subscribe(request, slug):
     user1 = Profile.objects.get(user=request.user)
     user2 = Profile.objects.get(user=profile.user_id)
 
-    relation_1 = Relations.objects.get(user_one=user1, user_two=user2)
+    relation_1 = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
     relation_1.is_subscribed = True
 
     user1.subscriptions += 1
@@ -120,7 +118,7 @@ def unsubscribe(request, slug):
             user1 = Profile.objects.get(user=request.user)
             user2 = Profile.objects.get(user=profile.user_id)
 
-            relation_1 = Relations.objects.get(user_one=user1, user_two=user2)
+            relation_1 = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
             relation_1.is_subscribed = False
             user1.subscriptions -=1
             user2.subscribers -= 1
@@ -138,8 +136,8 @@ def add2friends(request, slug):
             user1 = Profile.objects.get(user=request.user)
             user2 = Profile.objects.get(user=profile.user_id)
 
-            relation_1 = Relations.objects.get(user_one=user1, user_two=user2)
-            relation_2 = Relations.objects.get(user_one=user2, user_two=user1)
+            relation_1 = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
+            relation_2 = UsersRelation.objects.get(main_user=user2, secondary_user=user1)
 
             relation_1.is_subscribed = True
             relation_1.is_friends, relation_2.is_friends = True, True
@@ -162,8 +160,8 @@ def remove(request, slug):
     user1 = Profile.objects.get(user=request.user)
     user2 = Profile.objects.get(user=profile.user_id)
 
-    relation_1 = Relations.objects.get(user_one=user1, user_two=user2)
-    relation_2 = Relations.objects.get(user_one=user2, user_two=user1)
+    relation_1 = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
+    relation_2 = UsersRelation.objects.get(main_user=user2, secondary_user=user1)
 
     relation_1.is_subscribed = False
     relation_1.is_friends, relation_2.is_friends = False, False
@@ -180,29 +178,29 @@ def remove(request, slug):
 
 
 
-#
-# class Friends(View):
-#
-#     template = 'relations/friends.html'
-#
-#     def get(self, request):
-#         friends = Relations.objects.filter(user_one__user=request.user, is_friends=1)
-#         return render(request, self.template, context={'friends': friends, })
-#
-#
-# class Subs(View):
-#
-#     template = 'relations/subs.html'
-#
-#     def get(self, request):
-#         subs = Relations.objects.filter(user_one__user=request.user, is_subscribed=1)
-#         return render(request, self.template, context={'subs': subs})
-#
-#
-# class Search(View):
-#
-#     template = 'relations/search.html'
-#
-#     def get(self, request):
-#         users = Profile.objects.all
-#         return render(request, self.template, context={'users': users})
+
+class Friends(View):
+
+    template = 'user_profile/friends.html'
+
+    def get(self, request):
+        friends = UsersRelation.objects.filter(main_user__user=request.user, is_friends=1)
+        return render(request, self.template, context={'friends': friends, })
+
+
+class Subs(View):
+
+    template = 'user_profile/subs.html'
+
+    def get(self, request):
+        subs = UsersRelation.objects.filter(main_user__user=request.user, is_subscribed=1)
+        return render(request, self.template, context={'subs': subs})
+
+
+class Search(View):
+
+    template = 'user_profile/search.html'
+
+    def get(self, request):
+        users = Profile.objects.all
+        return render(request, self.template, context={'users': users})
