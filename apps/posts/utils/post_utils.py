@@ -1,25 +1,23 @@
+from django.db.models import Q
 from django.forms import model_to_dict
 
+from apps.user_profile.models import *
+from apps.relations.models import *
 from apps.posts.forms import *
-from apps.posts.models import *
-from apps.relations.models import Relations
-from apps.user_profile.models import Profile
 
 
 class PostUtils:
-
+    ''' '''
     @staticmethod
     def create_post(data, user):
         bound_form = PostForm(data)
         if bound_form.is_valid():
-
             new_post = bound_form.save(commit=False)
             new_post.user = user
             profile = user.profile
             profile.posts += 1
             profile.save()
             new_post.save()
-
             return new_post
 
     @staticmethod
@@ -43,11 +41,16 @@ class PostUtils:
                 new_obj = bound_form.save()
                 new_obj.is_changed = True
                 new_obj.save()
-                return  new_obj, 200
+                return new_obj, 200
         return None, 403
 
     @staticmethod
     def del_post(id , user):
+        """
+        :param id:
+        :param user:
+        :return:
+        """
         obj = Post.objects.get(id=int(id))
         if user == obj.user or user.is_staff:
                 user_object = Profile.objects.get(id=user.id)
@@ -60,6 +63,12 @@ class PostUtils:
 
     @staticmethod
     def create_comment(bound_form, user, id):
+        """
+        :param bound_form:
+        :param user:
+        :param id:
+        :return:
+        """
         post = Post.objects.get(id=id)
         if  post.comment_permission <= PostUtils.get_permission(post, user):
             if bound_form.is_valid():
@@ -73,6 +82,7 @@ class PostUtils:
                     return PostSerializer.new_comment_to_dict(new_comment, post.comments_amount,  user), 200
             return None, 403
         return None, 403
+
 
     @staticmethod
     def update_comment(comment_id, text, user):
@@ -153,15 +163,27 @@ class PostUtils:
                 return 200
         return 403
 
-class PostSerializer:
 
+class PostSerializer:
+    @staticmethod
+    def get_feed(searched_field, slug, ordering):
+        print(searched_field, slug)
+        if searched_field and slug:
+            query  = Q((searched_field,slug))
+            return Post.objects.filter(query).order_by(*ordering)
+        else:
+            return Post.objects.all()
+
+    ''' '''
     @staticmethod
     def feed_to_dict(posts, user):    # BECOME SERIALIZER IN FUTURE
+
         feed_dict = []
         for post in posts:
-            permission = PostUtils.get_permission(post, user,)
+            permission = PostUtils.get_permission(post, user)
             if post.see_post_permission <= permission:
                 post_dict = model_to_dict(post)
+
                 if post.see_author_permission <= permission:
                     post_dict['username'] = post.user.username
                     post_dict['url'] = post.user.profile.get_absolute_url()
@@ -173,19 +195,20 @@ class PostSerializer:
 
                 if post.see_statistic_permission <= permission:
                     if post.like_permission <= permission:
-                        like = Like.objects.filter(post=post_dict['id'])
+                        like = Like.objects.filter(post__id=post_dict['id'], user=user)
                         if like:
                             if like[0].exist:
                                 post_dict['is_liked'] = True
                         else:
                             post_dict['is_liked'] = False
-                    # if post.like_permission <= permission:
-                    #     post_dict['is_liked'] = False
-                    #     post_dict['likes_amount'] = 0
-                    # if post.comment_permission <= permission:
-                    #     post_dict['comments_amount'] = 0
-                    # if post.repost_permission <= permission:
-                    #     post_dict['reposts_amount'] = 0
+                        # if post.like_permission <= permission:
+                        #     post_dict['is_liked'] = False
+                        #     post_dict['likes_amount'] = 0
+                        # if post.comment_permission <= permission:
+                        #     post_dict['comments_amount'] = 0
+                        # if post.repost_permission <= permission:
+                        #     post_dict['reposts_amount'] = 0
+
                 else:
                     post_dict['is_liked'] = False
                     post_dict['likes_amount'] = 0
@@ -201,6 +224,7 @@ class PostSerializer:
                 feed_dict.append(post_dict)
         return feed_dict
 
+
     @staticmethod
     def new_comment_to_dict(comment, amount, user):
         comment = model_to_dict(comment)
@@ -212,15 +236,15 @@ class PostSerializer:
 
     @staticmethod
     def comments_to_dict(id, user):   # BECOME SERIALIZER IN FUTURE
+
         post = Post.objects.get(id=id)
         if post.see_comments_permission <= PostUtils.get_permission(post, user):
             comments = list(Comment.objects.filter(post=post).values())
             if comments:
                 for comment in comments:
-                    user = User.objects.get(id=comment['user_id'])
                     comment['username'] = user.username
                     comment['url'] = user.profile.get_absolute_url()
-                    like = Like.objects.filter(comment=comment['id'])
+                    like = Like.objects.filter(comment__id=comment['id'], user=user)
                     if like:
                         if like[0].exist:
                             comment['is_liked'] = True

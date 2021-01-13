@@ -7,7 +7,7 @@
                     <a v-bind:href="post.data.url">{{ post.data.username }}</a>
                 </h4>
                 <div class ="row" style="position: absolute; right: 10px;">
-                    <a href="" class="btn btn-info mr-2">read</a>
+                    <a v-bind:href="'/feed/post=' + post.id + '/'" class="btn btn-info mr-2">read</a>
                     <div v-if="user.id === post.data.user || user.is_staff">
                         <button v-on:click="showUpdatePost(post)" class="btn" >🖊</button>
                         <button v-on:click="post.show_del = true" class="btn mr-2">❌</button>
@@ -23,10 +23,10 @@
             <div class="row ml-2">
                 <div v-for="(tag, index) in post.tags">
                     <div v-if="index === post.tags.length - 1">
-                        <a class="mr-2" v-bind:href="getTagUrl(tag.title)">#{{tag.title}}</a>
+                        <a class="mr-2" v-bind:href="'/feed/tag=' + tag.title + '/'">#{{tag.title}}</a>
                     </div>
                     <div v-else="">
-                        <a class="mr-2" v-bind:href="getTagUrl(tag.title)"> #{{tag.title}},</a>
+                        <a class="mr-2" v-bind:href="'/feed/tag=' + tag.title + '/'"> #{{tag.title}},</a>
                     </div>
                 </div>
             </div>
@@ -56,7 +56,6 @@
         {%  endverbatim %}
             {% include 'includes/posts/comments_template.html' %}
             {% include 'includes/posts/delete_post_window.html' %}
-
             {% include 'includes/posts/repost_window.html' %}
         </div>
         <div v-else="">

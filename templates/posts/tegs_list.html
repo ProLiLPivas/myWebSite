@@ -1,6 +1,4 @@
-{#{% extends 'base.html' %}#}
 {% extends 'posts/feed.html' %}
-
 
 {%block title %}
     {{ post.title }}
@@ -9,10 +7,11 @@
 {%block content %}
     <h1 class="mb-4">Tags: </h1>
     {% for tag in tags %}
-        <div class="row col-12 mb-3">
-            <h3 class=" col-8">{{ tag.title }}</h3>
-            <a href=" {{ tag.get_absolute_url }}" class="btn btn-primary"> {{ tag.length }}</a>
-        </div>
-
+        {% if tag.length != 0 %}
+            <div class="row col-12 mb-3">
+                <h3 class=" col-8">{{ tag.title }}</h3>
+                <a href=" {{ tag.get_absolute_url }}" class="btn btn-primary"> {{ tag.length }}</a>
+            </div>
+        {% endif %}
     {% endfor %}
 {% endblock %}

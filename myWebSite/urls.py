@@ -22,9 +22,8 @@ from .viwes import redirect_posts
 urlpatterns = [
     path('', redirect_posts),
     path('admin/', admin.site.urls),
-    path('blog/', include('apps.posts.urls')),
+    path('feed/', include('apps.posts.urls')),
     path('user/',include('apps.user_profile.urls')),
-    path('friends/', include('apps.relations.urls')),
     path('messages/', include('apps.message.urls')),
 
     path('login/', views.LoginView.as_view(), name='login'),

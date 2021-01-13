@@ -11,3 +11,4 @@ function makeAjaxRequest(method, url, data=null){
         },
     });
 }
+export { makeAjaxRequest };
