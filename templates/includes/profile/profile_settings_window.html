@@ -1,0 +1,64 @@
+<transition name="delete-show">
+    {% verbatim %}
+    <div v-if="post.show_settings">
+        <table class="table table-borderless">
+            <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">All Users</th>
+                <th scope="col">Only Friends</th>
+                <th scope="col">Only Subs</th>
+                <th scope="col">Nobody</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <th scope="row">access messaging</th>
+                <td><input value=1 v-model="post.settings.access_messaging" type="radio"></td>
+                <td><input value=2 v-model="post.settings.access_messaging"  type="radio"></td>
+                <td><input value=3 v-model="post.settings.access_messaging"  type="radio"></td>
+                <td><input value=4 v-model="post.settings.access_messaging"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">access about</th>
+                <td><input value=1 v-model="post.settings.access_about" type="radio"></td>
+                <td><input value=2 v-model="post.settings.access_about"  type="radio"></td>
+                <td><input value=3 v-model="post.settings.access_about"  type="radio"></td>
+                <td><input value=4 v-model="post.settings.access_about"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">access albums</th>
+                <td><input value=1 v-model="post.settings.access_albums" type="radio"></td>
+                <td><input value=2 v-model="post.settings.access_albums" type="radio"></td>
+                <td><input value=3 v-model="post.settings.access_albums" type="radio"></td>
+                <td><input value=4 v-model="post.settings.access_albums"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">access images</th>
+                <td><input value=1 v-model="post.settings.access_images" type="radio"></td>
+                <td><input value=2 v-model="post.settings.access_images" type="radio"></td>
+                <td><input value=3 v-model="post.settings.access_images" type="radio"></td>
+                <td><input value=4 v-model="post.settings.access_images"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">access stats</th>
+                <td><input value=1 v-model="post.settings.access_stats" type="radio"></td>
+                <td><input value=2 v-model="post.settings.access_stats" type="radio"></td>
+                <td><input value=3 v-model="post.settings.access_stats" type="radio"></td>
+                <td><input value=4 v-model="post.settings.access_stats"  type="radio"></td>
+            </tr>
+            <tr>
+                <th scope="row">access profile</th>
+                <td><input value=1 v-model="post.settings.access_profile" type="radio"></td>
+                <td><input value=2 v-model="post.settings.access_profile" type="radio"></td>
+                <td><input value=3 v-model="post.settings.access_profile" type="radio"></td>
+                <td><input value=4 v-model="post.settings.access_profile"  type="radio"></td>
+            </tr>
+            </tbody>
+        </table>
+        <form @submit.prevent="changeSettings(post)">
+            <button class="btn btn-info">apply</button>
+        </form>
+    </div>
+    {% endverbatim %}
+</transition>

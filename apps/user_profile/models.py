@@ -60,7 +60,7 @@ class UsersRelation(models.Model):
     is_friends = models.BooleanField(default=False)
     is_subscribed = models.BooleanField(default=False)
     is_block = models.BooleanField(default=False)
-    related_object = models.OneToOneField('self', on_delete=models.CASCADE, blank=True)
+    related_object = models.OneToOneField('self', on_delete=models.CASCADE, blank=True, null=True)
 
     def get_private_chat_url(self):
         return reverse('private_chat_url', kwargs={'id': self.secondary_user.id})
