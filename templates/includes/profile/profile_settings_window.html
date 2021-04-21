@@ -1,6 +1,6 @@
-<transition name="delete-show">
+<div>
     {% verbatim %}
-    <div v-if="post.show_settings">
+    <div>
         <table class="table table-borderless">
             <thead>
             <tr>
@@ -13,52 +13,52 @@
             </thead>
             <tbody>
             <tr>
-                <th scope="row">access messaging</th>
-                <td><input value=1 v-model="post.settings.access_messaging" type="radio"></td>
-                <td><input value=2 v-model="post.settings.access_messaging"  type="radio"></td>
-                <td><input value=3 v-model="post.settings.access_messaging"  type="radio"></td>
-                <td><input value=4 v-model="post.settings.access_messaging"  type="radio"></td>
+                <th scope="row">access messaging with you</th>
+                <td><input value=0 v-model="settings.access_messaging" type="radio"></td>
+                <td><input value=2 v-model="settings.access_messaging"  type="radio"></td>
+                <td><input value=4 v-model="settings.access_messaging"  type="radio"></td>
+                <td><input value=5 v-model="settings.access_messaging"  type="radio"></td>
             </tr>
             <tr>
-                <th scope="row">access about</th>
-                <td><input value=1 v-model="post.settings.access_about" type="radio"></td>
-                <td><input value=2 v-model="post.settings.access_about"  type="radio"></td>
-                <td><input value=3 v-model="post.settings.access_about"  type="radio"></td>
-                <td><input value=4 v-model="post.settings.access_about"  type="radio"></td>
+                <th scope="row">access to your about</th>
+                <td><input value=0 v-model="settings.access_about" type="radio"></td>
+                <td><input value=1 v-model="settings.access_about"  type="radio"></td>
+                <td><input value=4 v-model="settings.access_about"  type="radio"></td>
+                <td><input value=5 v-model="settings.access_about"  type="radio"></td>
             </tr>
             <tr>
-                <th scope="row">access albums</th>
-                <td><input value=1 v-model="post.settings.access_albums" type="radio"></td>
-                <td><input value=2 v-model="post.settings.access_albums" type="radio"></td>
-                <td><input value=3 v-model="post.settings.access_albums" type="radio"></td>
-                <td><input value=4 v-model="post.settings.access_albums"  type="radio"></td>
+                <th scope="row">access to your albums</th>
+                <td><input value=0 v-model="settings.access_albums" type="radio"></td>
+                <td><input value=2 v-model="settings.access_albums" type="radio"></td>
+                <td><input value=4 v-model="settings.access_albums" type="radio"></td>
+                <td><input value=5 v-model="settings.access_albums"  type="radio"></td>
             </tr>
             <tr>
-                <th scope="row">access images</th>
-                <td><input value=1 v-model="post.settings.access_images" type="radio"></td>
-                <td><input value=2 v-model="post.settings.access_images" type="radio"></td>
-                <td><input value=3 v-model="post.settings.access_images" type="radio"></td>
-                <td><input value=4 v-model="post.settings.access_images"  type="radio"></td>
+                <th scope="row">access to your images</th>
+                <td><input value=0 v-model="settings.access_images" type="radio"></td>
+                <td><input value=2 v-model="settings.access_images" type="radio"></td>
+                <td><input value=4 v-model="settings.access_images" type="radio"></td>
+                <td><input value=5 v-model="settings.access_images"  type="radio"></td>
             </tr>
             <tr>
-                <th scope="row">access stats</th>
-                <td><input value=1 v-model="post.settings.access_stats" type="radio"></td>
-                <td><input value=2 v-model="post.settings.access_stats" type="radio"></td>
-                <td><input value=3 v-model="post.settings.access_stats" type="radio"></td>
-                <td><input value=4 v-model="post.settings.access_stats"  type="radio"></td>
+                <th scope="row">access to your stats</th>
+                <td><input value=0 v-model="settings.access_stats" type="radio"></td>
+                <td><input value=2 v-model="settings.access_stats" type="radio"></td>
+                <td><input value=4 v-model="settings.access_stats" type="radio"></td>
+                <td><input value=5 v-model="settings.access_stats"  type="radio"></td>
             </tr>
             <tr>
-                <th scope="row">access profile</th>
-                <td><input value=1 v-model="post.settings.access_profile" type="radio"></td>
-                <td><input value=2 v-model="post.settings.access_profile" type="radio"></td>
-                <td><input value=3 v-model="post.settings.access_profile" type="radio"></td>
-                <td><input value=4 v-model="post.settings.access_profile"  type="radio"></td>
+                <th scope="row">access to your profile</th>
+                <td><input value=0 v-model="settings.access_posts" type="radio"></td>
+                <td><input value=2 v-model="settings.access_posts" type="radio"></td>
+                <td><input value=4 v-model="settings.access_posts" type="radio"></td>
+                <td><input value=5 v-model="settings.access_posts"  type="radio"></td>
             </tr>
             </tbody>
         </table>
-        <form @submit.prevent="changeSettings(post)">
+
+    </div><form @submit.prevent="update_settings()">
             <button class="btn btn-info">apply</button>
-        </form>
-    </div>
+    </form>
     {% endverbatim %}
-</transition>
+</div>

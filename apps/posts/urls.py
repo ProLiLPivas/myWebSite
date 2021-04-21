@@ -9,7 +9,7 @@ urlpatterns = [
     # path('subscribers/', SubscribersFeed.as_view(), name='subscribers_feed_url'), #
     # path('subscription/', SubscriptionFeed.as_view(), name='subscription_feed_url'), #
 
-    path('user=<int:slug>/', FeedForProfile.as_view(), name='user_feed_url'), #
+    path('user=<str:slug>/', FeedForProfile.as_view(), name='user_feed_url'), #
 
     path('post/create/', CreatePost.as_view(), name='create_post_url'),
     path('post/update/', UpdatePost.as_view(), name='update_post_url'),

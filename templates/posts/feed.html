@@ -5,37 +5,9 @@
 {% endblock %}
 
 {% block content %}
-    <div id="start_page">
-        {% block discription %}
+     {% block discription %}
             <h2 class="mb-4">Posts: </h2>
         {% endblock %}
 
-        {% block creating_new %}
-            <button class="btn btn-primary mb-4" v-on:click="startCreatingPost">
-                CREATE NEW
-            </button>
-            <div v-if="show_create">
-                    <div v-for="post in newPost">
-                       {%  include 'includes/posts/update_or_create_post.html' %}
-                    </div>
-            </div>
-        {% endblock %}
-
-        {% block feeed %}
-            <div v-for="(post, index) in feed">
-                 {% include 'includes/posts/post_template.html' %}
-            </div>
-        {% endblock %}
-    </div>
-
-    {% load static %}
-    <script type="module">
-        import {UrlsList} from "../../frontend/js/posts/urls.js";
-        UrlsList.urlsList.getFeedUrl = '{{ url }}'
-    </script>
-    <script  type="module" src="{% static 'js/posts/feedVueApp.js' %}"></script>
-    <script type="module">
-        {% block adding_scripts %}
-        {% endblock %}
-    </script>
+    {% include 'posts/base_feed.html' with is_show_create=True%}
 {% endblock %}

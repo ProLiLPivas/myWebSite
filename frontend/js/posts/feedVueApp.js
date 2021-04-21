@@ -8,7 +8,7 @@ import {UrlsList} from "./urls.js";
 
 
 var app = new Vue({
-    el: '#start_page',
+    el: '#feed',
     data: {
         show_create: false,
         newPost: [],

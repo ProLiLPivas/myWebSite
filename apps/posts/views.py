@@ -31,7 +31,7 @@ class FilteredFeed(FeedMixin, View, LoginRequiredMixin):
 
 class FeedForProfile(FeedMixin, View):
     template = 'posts/feed.html'
-    query_parameters = ['user', None]
+    query_parameters = ['user__profile__slug', None]
 
 
 class ReadPost(FeedMixin, View):  # read details about post

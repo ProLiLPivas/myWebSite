@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+    <div id="related_users_list">
+        <div class="row">
+        <button v-on:click="get_related_users('{% url 'friends_url' %}')"
+                class="btn btn-info mr-2">friends</button>
+        <button v-on:click="get_related_users('{% url 'subscribers_url' %}')"
+                class="btn btn-info mr-2">subscribers</button>
+        <button v-on:click="get_related_users('{% url 'subscriptions_url' %}')"
+                class="btn btn-info mr-2">subscriptions</button>
+        <button v-on:click="get_related_users('{% url 'blacklist_url' %}')"
+                class="btn btn-info mr-2">black list</button>
+        </div>
+        {% verbatim %}
+        <div v-if="related_users_list.length !== 0">
+            <h2>{{ list_title }}</h2>
+            <div v-for="user in related_users_list">
+                <div class="card mb-0">
+                    <div class="card-body row">
+                        <h4> img </h4>
+                        <a v-bind:href='user.url'>{{ user.user }}</a>
+                        <a class="btn btn-info" v-bind:href="user.chat_url"> send msg</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div v-else="">
+            <h2 class="row">U dont have any {{ list_title }}</h2>
+        </div>
+        {% endverbatim %}
+    </div>
+
+
+
+    <script>
+    function makeAjaxRequest(method, url, data=null){
+        return axios({
+            method: method,
+            url: url,
+            data: data,
+            xsrfCookieName: 'csrftoken',
+            xsrfHeaderName: 'X-CSRFToken',
+            headers :{
+                'Access-Control-Allow-Origin': '*',
+                'X-Requested-With':'XMLHttpRequest'
+            },
+        });
+    }
+
+    new Vue({
+        el: '#related_users_list',
+        data: {
+            related_users_list: [],
+            list_title: '',
+        },
+        created(){
+            url = '{% url 'friends_url' %}';
+            makeAjaxRequest('get', url)
+                .then( response => {
+                    this.related_users_list = response.data.related_users;
+                    this.list_title = response.data.key;
+                })
+        },
+        methods:{
+            get_related_users(related_users_url){
+                makeAjaxRequest('get', related_users_url)
+                .then( response => {
+                    this.related_users_list = response.data.related_users;
+                    this.list_title = response.data.key;
+                })
+            }
+        },
+    });
+    </script>
+
+{% endblock %}

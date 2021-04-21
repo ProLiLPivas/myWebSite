@@ -6,8 +6,14 @@ from django.urls import reverse
 
 
 class Profile(models.Model):
-    # 1 -> all , 2 -> only subscribers, 3 -> only friends, 4 -> nobody ,  5 is only for u
-    PERMISSIONS_TYPES = ((1, 'All Users'), (2, 'Only Subscribers'), (3, 'Only Friends'), (4, 'Nobody'))
+
+    PERMISSIONS_TYPES = (
+        (0, 'All Users'),
+        (2, 'Only Subscribers'),
+        (4, 'Only Friends'),
+        (5, 'Nobody')
+    )
+    default_permission_settings = {'choices': PERMISSIONS_TYPES, 'default': 0}
 
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     slug = models.SlugField(max_length=50, default='')
@@ -19,51 +25,72 @@ class Profile(models.Model):
     subscribers = models.IntegerField(default=0)
     subscriptions = models.IntegerField(default=0)
 
-    access_messaging = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    access_add_friends = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    access_post = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    access_about = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    access_albums = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    access_images = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    access_stats = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    access_profile = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    access_messaging = models.IntegerField(**default_permission_settings)
+    access_posts = models.IntegerField(**default_permission_settings)
+    access_about = models.IntegerField(**default_permission_settings)
+    access_albums = models.IntegerField(**default_permission_settings)
+    access_images = models.IntegerField(**default_permission_settings)
+    access_stats = models.IntegerField(**default_permission_settings)
+
 
     def __str__(self):
         return self.user.username
 
     def save(self, *args, **kwargs):
         self.slug = 'id{}'.format(self.user_id)
+        UsersRelation(main_user_profile=self, secondary_user_profile=self)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('get_user_url', kwargs={'slug' : self.slug})
+        return reverse('user_profile_url', kwargs={'slug' : self.slug})
 
     def get_chat_url(self):
         return reverse('private_chat_url', kwargs={'id': self.user.id})
 
-    def subscribe_url(self):
-        return reverse('subscribe', kwargs={'slug': self.slug})
-
-    def add_friend_url(self):
-        return reverse('add_friend', kwargs={'slug': self.slug})
-
-    def unsubscribe_url(self):
-        return reverse('unsubscribe', kwargs={'slug': self.slug})
-
-    def remove_friend_url(self):
-        return reverse('remove_friend', kwargs={'slug': self.slug})
-
 
 class UsersRelation(models.Model):
-    main_user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='user1')
-    secondary_user = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='user2')
+    main_user_profile = models.ForeignKey(
+        Profile, on_delete=models.CASCADE, related_name='user1')
+    secondary_user_profile = models.ForeignKey(
+        Profile, on_delete=models.CASCADE, related_name='user2')
     is_friends = models.BooleanField(default=False)
     is_subscribed = models.BooleanField(default=False)
-    is_block = models.BooleanField(default=False)
-    related_object = models.OneToOneField('self', on_delete=models.CASCADE, blank=True, null=True)
+    is_blocked = models.BooleanField(default=False)
+    related_object = models.OneToOneField(
+        'self', on_delete=models.CASCADE, blank=True, null=True)
 
     def get_private_chat_url(self):
-        return reverse('private_chat_url', kwargs={'id': self.secondary_user.id})
+        return reverse(
+            'private_chat_url', kwargs={'id': self.secondary_user_profile.id})
+
+    def save(self, **kwargs):
+
+        super().save(**kwargs)
+
+        if not self.related_object:
+            relation_two = UsersRelation.objects.create(
+                main_user_profile=self.secondary_user_profile,
+                secondary_user_profile=self.main_user_profile,
+                related_object=self
+            )
+            self.related_object = relation_two
+            self.save()
+
+    def get_relations_status(self) -> int:
+        if self.main_user_profile == self.secondary_user_profile:
+            return 5  # its u
+        elif self.is_friends:
+            return 4  # u r friends
+        elif self.related_object.is_subscribed:
+            return 3  # this is ur subscriber
+        elif self.is_subscribed:
+            return 2  # this is ur subscription
+        elif self.related_object.is_blocked:
+            return 1  # u block this user
+        elif self.is_blocked:
+            return -1  # u blocked by this person
+        else:
+            return 0  # this person u don't know
 
 
 @receiver(post_save, sender=User)

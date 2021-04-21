@@ -1,0 +1,27 @@
+<div class="modal fade show " aria-modal="true" role="dialog" style="display: block; ">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <button v-on:click="is_show_related_users = false" class="btn">x</button>
+            {% verbatim %}
+            <div>
+                <div v-if="related_users_list.length !== 0">
+                    <h4>{{ list_title }}</h4>
+                    <div v-for="user in related_users_list">
+                        <div class="card mb-0">
+                            <div class="card-body row">
+                                <h6> img</h6>
+                                <a v-bind:href='user.url'>{{ user.user }}</a>
+                                <a class="btn btn-info" v-bind:href="user.chat_url"> send msg </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div v-else="">
+                    <h4 class="row">This user dont have any {{ list_title }}</h4>
+                </div>
+            </div>
+            {% endverbatim %}
+        </div>
+    </div>
+</div>
+

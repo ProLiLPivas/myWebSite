@@ -94,11 +94,11 @@ class BaseChat:
 
         data = {'connection': self.chat_connection}
         try:
-            self.chat_connection = ChatUtils.get_private_or_public_chat(self.is_public, request.user, id)
+            self.chat_connection = get_private_or_public_chat(self.is_public, request.user, id)
             return render(request, self.template, context=data)
         except Connection2Chat.DoesNotExist:
             if not self.is_public:
-                self.chat_connection = ChatUtils.generate_connections(request.user, recipient=id)
+                self.chat_connection = generate_connections(request.user, recipient=id)
                 return render(request, self.template, context=data)
 
     def post(self, request, id):

@@ -1,8 +1,12 @@
 from time import time
+from typing import Dict
+
 from django.db import models
 from django.shortcuts import reverse
 from django.utils.text import slugify
 from django.contrib.auth.models import User
+
+from apps.user_profile.models import UsersRelation
 
 
 def generate_slug(title):
@@ -11,7 +15,15 @@ def generate_slug(title):
 
 
 class Post(models.Model):
-    PERMISSIONS_TYPES = ((1, 'All Users'), (2, 'Only Subscribers'), (3, 'Only Friends'), (4, 'Nobody'))
+    """
+
+    """
+    PERMISSIONS_TYPES = (
+        (0, 'All Users'),
+        (2, 'Only Subscribers'),
+        (4, 'Only Friends'),
+        (5, 'Nobody')
+    )
 
     title = models.CharField(max_length=150, db_index=True)
     slug = models.SlugField(max_length=150, blank=True, unique=True)
@@ -24,14 +36,15 @@ class Post(models.Model):
     reposts_amount = models.IntegerField(default=0)
     is_changed = models.BooleanField(default=False)
 
-
-    see_comments_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    comment_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    like_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    repost_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1,)
-    see_statistic_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    see_author_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
-    see_post_permission = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    default_permission_settings = {'choices': PERMISSIONS_TYPES, 'default': 0}
+    #
+    see_comments_permission = models.IntegerField(**default_permission_settings)
+    comment_permission = models.IntegerField(**default_permission_settings)
+    like_permission = models.IntegerField(**default_permission_settings)
+    repost_permission = models.IntegerField(**default_permission_settings)
+    see_statistic_permission = models.IntegerField(**default_permission_settings)
+    see_author_permission = models.IntegerField(**default_permission_settings)
+    see_post_permission = models.IntegerField(**default_permission_settings)
 
 
     def get_absolute_url(self):
@@ -40,6 +53,24 @@ class Post(models.Model):
     def get_comments_url(self):
         return reverse('comment_url', kwargs={'id': self.id})
 
+    def get_get_relations_status(self, user: User) -> int:
+        return UsersRelation.objects.get_or_create(
+            main_user_profile=self.user.profile,
+            secondary_user_profile=user.profile
+        ).get_relations_status()
+
+    def get_permissions_dict(self, user) -> Dict[str, bool]:
+        permission = self.get_get_relations_status(user)
+        return {
+            'see_profile_permission':  True,
+            'see_post_permission': self.see_post_permission <= permission,
+            'see_author_permission': self.see_author_permission <= permission,
+            'see_statistic_permission': self.see_statistic_permission <= permission,
+            'like_permission': self.like_permission <= permission,
+            'comment_permission': self.comment_permission <= permission,
+            'repost_permission': self.repost_permission <= permission,
+        }
+
     def save(self, *args, **kwargs):
         if not self.id:
             self.slug = generate_slug(self.title)
@@ -47,6 +78,7 @@ class Post(models.Model):
 
     def __str__(self):
         return self.title
+
 
     class Meta:
         ordering = ['-date_publication']

@@ -72,7 +72,7 @@ class PostUtils:
         post = Post.objects.get(id=id)
         if  post.comment_permission <= PostUtils.get_permission(post, user):
             if bound_form.is_valid():
-                new_comment = bound_form.save(commit=False)
+                new_comment = bound_form.save()
                 if new_comment.text != 'null':
                     post.comments_amount += 1
                     new_comment.post = post
@@ -137,18 +137,21 @@ class PostUtils:
         if post.repost_permission <= PostUtils.get_permission(post, user):
             pass
 
-
     @staticmethod
     def get_permission(post, user):
+
         if post.user == user:
             return 4
-        rel = UsersRelation.objects.get_or_create(main_user=post.user.profile, secondary_user=user.profile)
+        rel = UsersRelation.objects.get_or_create(
+            main_user_profile=post.user.profile,
+            secondary_user_profile=user.profile
+        )
         rel = rel[0]
         if rel.is_friends:
             return 3
         elif rel.is_subscribed:
             return 2
-        elif rel.is_block:
+        elif rel.is_blocked:
             return 0
         else:
             return 1

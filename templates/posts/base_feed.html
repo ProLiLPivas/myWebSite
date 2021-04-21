@@ -1,0 +1,28 @@
+<div id="feed">
+    {% if is_show_create %}
+        <button class="btn btn-primary mb-4" v-on:click="startCreatingPost">
+        CREATE NEW
+        </button>
+        <div v-if="show_create">
+            <div v-for="post in newPost">
+                {%  include 'includes/posts/update_or_create_post.html' %}
+            </div>
+        </div>
+    {% endif %}
+        <div v-for="(post, index) in feed">
+            {% include 'includes/posts/post_template.html' %}
+        </div>
+
+</div>
+
+
+{% load static %}
+<script type="module">
+    import {UrlsList} from "../../frontend/js/posts/urls.js";
+    UrlsList.urlsList.getFeedUrl = '{{ url }}'
+</script>
+<script  type="module" src="{% static 'js/posts/feedVueApp.js' %}"></script>
+<script type="module">
+    {% block adding_scripts %}
+    {% endblock %}
+</script>

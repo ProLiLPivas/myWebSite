@@ -3,22 +3,26 @@ from .views import *
 
 
 urlpatterns = [
-    # path('all'),
-    path('friends/', Friends.as_view(), name='friends_url'),
-    path('subs/', Subs.as_view(), name='subs_url'),
-    path('search/', Search.as_view(), name='search_url'),
 
+    path('all/', All.as_view(), name='all_users_list_url'),
     path('me/', MyProfile.as_view(), name='get_my_profile'),
-    path('update/', UpdateProfile.as_view(), name='update_profile'),
+    path('me/settings/', ProfileSettings.as_view(), name='profile_settings'),
+    path('subscribers/', Subscribers.as_view(), name='subscribers_url'),
+    path('subscriptions/', Subscriptions.as_view(), name='subscriptions_url'),
+    path('friends/', Friends.as_view(), name='friends_url'),
+    path('blacklist/', BlackList.as_view(), name='blacklist_url'),
 
-    path('<str:slug>/', UserProfile.as_view(), name='get_user_url'),
 
-    path('<str:slug>/sub', subscribe, name='subscribe'),
-    path('<str:slug>/add', add2friends, name='add_friend'),
-    path('<str:slug>/unsub', unsubscribe, name='unsubscribe'),
-    path('<str:slug>/remove', remove, name='remove_friend'),
-    # path('<str:slug>/block', block, name='remove_friend'),
-    # path('<str:slug>/unblock', unblock, name='remove_friend'),
+    path('<str:slug>/', UserProfile.as_view(), name='user_profile_url'),
+    path('<str:slug>/subscribers/', Subscribers.as_view()),
+    path('<str:slug>/subscriptions/', Subscriptions.as_view()),
+    path('<str:slug>/friends/', Friends.as_view()),
+    path('<str:slug>/block/', BlackList.as_view(), name='blacklist_url'),
+
+
+
+
+
 
 
 

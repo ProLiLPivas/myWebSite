@@ -1,206 +1,97 @@
-from django.shortcuts import render, get_object_or_404, redirect
+from django.http import JsonResponse
+from django.shortcuts import render, redirect
 from django.views import View
-from apps.posts.models import Post
-from .models import Profile, UsersRelation
+
+from apps.user_profile.forms import ProfileSettingsForm
+from apps.user_profile.utils.profile_utils import *
+from apps.user_profile.utils.relations_mixixns import RelatedUsersView
+from apps.posts.utils.post_mixins import FeedMixin
 
 
-class UserProfile(View):
-    model = Profile
-    template = 'user_profile/get_user.html'
-
-    def get_relations_status(self, relation: UsersRelation):
-
-        if relation.is_friends:
-            return 3
-        elif relation.is_subscribed:
-            return 2
-        elif relation.is_block: # if u blocked u cant see of do any anything with profile, cant messaging, cant add 2 friend
-            return 0
-        else:
-            return 1
+class All(View):
+    def get(self, request):
+        pass
+        # return render(request, 'profile/search.html', context={'users': Profile.objects.all()})
 
 
+class UserProfile(FeedMixin, View):
+    template = 'profile/user_profile.html'
+    query_parameters = ['user__profile__slug', None]
+    
     def get(self, request, slug):
-
-        profile = get_object_or_404(self.model, slug__iexact=slug)
-        if request.user == profile.user:
-            return render(request, self.template, context={
-                'profile': profile,
-                'posts': Post.objects.filter(user=profile.user_id),
-                'user': request.user,
-                'status': 5
-            })
+        if request.is_ajax():
+            return FeedMixin.get(self, request, slug)
         else:
-            try:
-                user1 = Profile.objects.get(user=request.user)
-                user2 = Profile.objects.get(user=profile.user_id)
-
-                relations = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
-                relations2 = UsersRelation.objects.get(main_user=user2, secondary_user=user1)
-
-                return render(request, self.template, context={
-                    self.model.__name__.lower(): profile ,
-                    'posts': Post.objects.filter(user=profile.user_id),
-                    'user': request.user,
-                    'relations': relations,
-                    'relations2': relations2,
-                    'status': self.get_relations_status(relations)
-                })
-            except UsersRelation.DoesNotExist:
-                user1 = Profile.objects.get(user=request.user)
-                user2 = Profile.objects.get(user=profile.user_id)
-                relation = UsersRelation(main_user=user1, secondary_user=user2)
-                relation2 = UsersRelation(main_user=user2, secondary_user=user1)
-
-                r = relation.save()
-                r2 = relation2.save()
-                user1.save()
-                user2.save()
-
-                return render(request, self.template, context={
-                    self.model.__name__.lower(): profile,
-                    'posts': Post.objects.filter(user=profile.user_id),
-                    'user': request.user,
-                    'relations': r,
-                    'relations2': r2
-                })
-
+            context = get_profile_context(slug, request.user.profile, request.path)
+            return render(request, self.template, context=context)
 
 
 class MyProfile(View):
-    model = Profile
-    template = 'user_profile/get_user.html'
-
     def get(self, request):
-        slug = Profile.objects.get(user=request.user).slug
-        return redirect('/user/' + slug)
+        return redirect('/user/' + request.user.profile.slug)
 
 
-class UpdateProfile(View):
-    model = Profile
-    template = 'user_profile/update_user.html'
-
+class ProfileSettings(View):
     def get(self, request):
-        profile = Profile.objects.get(user=request.user)
+        if request.is_ajax():
+            data = {
+                'access_messaging': request.user.profile.access_messaging,
+                'access_posts': request.user.profile.access_posts,
+                'access_about': request.user.profile.access_about,
+                'access_albums': request.user.profile.access_albums,
+                'access_images': request.user.profile.access_images,
+                'access_stats': request.user.profile.access_stats,
+            }
+            return JsonResponse(data=data)
+        return render(request, 'profile/profile_settings.html')
 
-        return render(request, self.template, context={
-            self.model.__name__.lower(): profile,
-            'posts': Post.objects.filter(user=profile.user_id),
-            'user': request.user,
-        })
-
-
-
-model = Profile
-
-
-def subscribe(request, slug):
-    profile = get_object_or_404(model, slug__iexact=slug)
-    user1 = Profile.objects.get(user=request.user)
-    user2 = Profile.objects.get(user=profile.user_id)
-
-    relation_1 = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
-    relation_1.is_subscribed = True
-
-    user1.subscriptions += 1
-    user2.subscribers += 1
-
-    relation_1.save()
-    user1.save()
-    user2.save()
-
-    return redirect('/user/' + slug)
-
-
-def unsubscribe(request, slug):
-
-            profile = get_object_or_404(model, slug__iexact=slug)
-            user1 = Profile.objects.get(user=request.user)
-            user2 = Profile.objects.get(user=profile.user_id)
-
-            relation_1 = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
-            relation_1.is_subscribed = False
-            user1.subscriptions -=1
-            user2.subscribers -= 1
-
-            relation_1.save()
-            user1.save()
-            user2.save()
-
-            return redirect('/user/' + slug)
-
-
-def add2friends(request, slug):
-
-            profile = get_object_or_404(model, slug__iexact=slug)
-            user1 = Profile.objects.get(user=request.user)
-            user2 = Profile.objects.get(user=profile.user_id)
-
-            relation_1 = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
-            relation_2 = UsersRelation.objects.get(main_user=user2, secondary_user=user1)
-
-            relation_1.is_subscribed = True
-            relation_1.is_friends, relation_2.is_friends = True, True
-            user1.subscriptions += 1
-            user1.friends += 1
-            user2.subscribers += 1
-            user2.friends += 1
-
-            user1.save()
-            user2.save()
-            relation_1.save()
-            relation_2.save()
-
-            return redirect('/user/' + slug)
-
-
-def remove(request, slug):
-
-    profile = get_object_or_404(model, slug__iexact=slug)
-    user1 = Profile.objects.get(user=request.user)
-    user2 = Profile.objects.get(user=profile.user_id)
-
-    relation_1 = UsersRelation.objects.get(main_user=user1, secondary_user=user2)
-    relation_2 = UsersRelation.objects.get(main_user=user2, secondary_user=user1)
-
-    relation_1.is_subscribed = False
-    relation_1.is_friends, relation_2.is_friends = False, False
-    user1.subscriptions -= 1
-    user1.friends -= 1
-    user2.subscribers -= 1
-    user2.friends -= 1
-
-    user1.save()
-    user2.save()
-    relation_1.save()
-    relation_2.save()
-    return redirect('/user/' + slug)
+    def post(self, request):
+        print(request.POST)
+        bound_form = ProfileSettingsForm(request.POST, instance=request.user.profile)
+        if bound_form.is_valid():
+            bound_form.save()
+            return redirect('/')
 
 
 
-
-class Friends(View):
-
-    template = 'user_profile/friends.html'
-
-    def get(self, request):
-        friends = UsersRelation.objects.filter(main_user__user=request.user, is_friends=1)
-        return render(request, self.template, context={'friends': friends, })
+class ChangeAvatar:
+    pass
 
 
-class Subs(View):
-
-    template = 'user_profile/subs.html'
-
-    def get(self, request):
-        subs = UsersRelation.objects.filter(main_user__user=request.user, is_subscribed=1)
-        return render(request, self.template, context={'subs': subs})
+class AddImage:
+    pass
 
 
-class Search(View):
+class ChangeProfileSettings:
+    pass
 
-    template = 'user_profile/search.html'
 
-    def get(self, request):
-        users = Profile.objects.all
-        return render(request, self.template, context={'users': users})
+class Subscriptions(RelatedUsersView, View):
+    key = 'Subscriptions'
+    slug_query_parameter = 'main_user_profile__slug'
+    second_condition = ('is_subscribed', 1)
+    is_have_post_method = False
+
+
+class Subscribers(RelatedUsersView, View):
+    key = 'Subscribers'
+    slug_query_parameter = 'secondary_user_profile__slug'
+    second_condition = ('is_subscribed', 1)
+    post_action_func = subscribe_or_unsubscribe
+
+
+class Friends(RelatedUsersView, View):
+    key = 'Friends'
+    slug_query_parameter = 'main_user_profile__slug'
+    second_condition = ('is_friends', 1)
+    post_action_func = add_or_remove_friends
+
+
+class BlackList(RelatedUsersView, View):
+    key = 'users in ur BlackList'
+    slug_query_parameter = 'main_user_profile__slug'
+    second_condition = ('is_blocked', 1)
+    post_action_func = block_unblock_user
+
+
+

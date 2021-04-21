@@ -33,20 +33,27 @@ class Chat(models.Model):
         self.last_message_id = first_message.id
         self.save()
 
+
+
 class Connection2Chat(models.Model):
+    ROLES_TYPES = (
+        (1, 'simple user'),
+        (2, 'administrator'),
+        (3, 'creator'),
+    )
+
     """ every user in chat MUST 2 have this column in db """
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='user')
     chat = models.ForeignKey(Chat, on_delete=models.CASCADE)
     recipient = models.ForeignKey(User, null=True, on_delete=models.CASCADE, related_name='recipient') # using to get recipient in private chats
     chat_num = models.IntegerField(null=True)  # using to generate url for public chat
-    role = models.IntegerField(default=1) # 1 - simple user, 2 - admin, 3 - creator
+    role = models.IntegerField(choices=ROLES_TYPES, default=1)
 
     def get_chat_url(self):
         if self.chat.is_public:
             return reverse('public_chat_url', kwargs={'id': self.chat_num})
         else:
             return reverse('private_chat_url', kwargs={'id': self.recipient.id})
-
 
 
 class Message(models.Model):

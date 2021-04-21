@@ -20,6 +20,7 @@ class FeedMixin:
             posts = Post.objects.filter(query).order_by(*self.ordering)
             feed_dict = PostSerializer.feed_to_dict(posts, request.user)
             users_dict = {'id': request.user.id, 'username': request.user.username,  'is_staff': request.user.is_staff}
+            print(JsonResponse({'posts': feed_dict, 'user': users_dict, 'url': request.path}, status=200))
             return JsonResponse({'posts': feed_dict, 'user': users_dict, 'url': request.path}, status=200)
         return render(request, self.template, context={'url': request.path, 'slug': slug})
 

@@ -1,0 +1,167 @@
+{% extends 'posts/feed.html' %}
+
+{% block title %}
+    {{ profile.username }}
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="row">
+        <div class=" col-md-1 col-sm-0"  style="position: absolute; right: 0;">
+            {% include 'includes/profile/settings_dropsown.html' %}
+        </div>
+    </div>
+
+    <div id="profile_app">
+
+        <p><h3>{{ profile.username }}</h3>
+        <div class="row">
+            <div class="col-md-4">
+                {% block image %}
+                    image
+                {% endblock %}
+            </div>
+            <div v-if="status !== -1">
+                <div class=" col-md-8">
+                    <p><a href="/feed/user={{ profile.slug }}"  class="btn" > posts :  {{ profile.posts }}</a></p>
+                    <p><button v-on:click="get_users_related_with('friends')" type="button" class="btn">
+                        friends : {{ profile.friends }}</button></p>
+                    <p><button v-on:click="get_users_related_with('subscribers')" class="btn">
+                        subscribers : {{ profile.subscribers }}</button></p>
+                    <p><button v-on:click="get_users_related_with('subscriptions')" class="btn">
+                        subscriptions : {{ profile.subscriptions }}</button></p>
+                    <p class="btn"> about : {{ profile.about }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div v-if="your_relation_status !== -1">
+            <div class="mb-3">
+                <div v-if="your_relation_status === 5"> <button class="btn btn-info">edit</button></div>
+                <div v-else>
+                    <div v-if="your_relation_status === 4">
+                        <a href="/messages/id={{ profile.user }}" class="btn btn-info">send message </a>
+                        <button v-on:click="add_remove_friends()" class="btn btn-info">remove from friends</button>
+                    </div>
+                    <div v-else-if="your_relation_status === 3">
+                        <button v-on:click="add_remove_friends()" class="btn btn-info">add to friends</button></div>
+                    <div v-else-if="your_relation_status === 2">
+                        <button v-on:click="subscribe_unsubscribe()" class="btn btn-info">unsubscribe</button></div>
+                    <div v-else-if="your_relation_status === 1">
+                        <button v-on:click="subscribe_unsubscribe()" class="btn btn-info">subscribe</button></div>
+                    <div v-else-if="your_relation_status === 0">
+                        <button v-on:click="subscribe_unsubscribe()" class="btn btn-info">unblock</button></div>
+                </div>
+                <transition>
+                    <div v-if="is_show_related_users">
+                        {% include 'includes/profile/related_users_window.html' %}
+                    </div>
+                </transition>
+            </div>
+{#                <button v-on:click="block_unblock_user()" class="btn btn-warning">block</button>#}
+        </div>
+
+
+    </div>
+
+
+    <script  type="">
+        function makeAjaxRequest(method, url, data=null){
+            return axios({
+                method: method,
+                url: url,
+                data: data,
+                xsrfCookieName: 'csrftoken',
+                xsrfHeaderName: 'X-CSRFToken',
+                headers :{
+                    'Access-Control-Allow-Origin': '*',
+                    'X-Requested-With':'XMLHttpRequest'
+                },
+            });
+        }
+
+        new Vue({
+            el: '#profile_app',
+            data: {
+                a: 0,
+                your_relation_status: 0,
+                is_show_related_users: false,
+                related_users_list: [],
+                list_title: '',
+            },
+            created() {
+                this.your_relation_status = {{ status }};
+                this.slug = '{{ profile.slug }}';
+            },
+
+            methods: {
+                get_users_related_with(users_category_url){
+                    url = '/user/' + this.slug + '/' + users_category_url +'/';
+                    makeAjaxRequest('get', url).then(
+                        response => {
+                            this.related_users_list = response.data.related_users;
+                            this.list_title = response.data.key;
+                            this.is_show_related_users = true;
+                        }
+                    )
+                },
+
+                subscribe_unsubscribe(){
+                    url = '/user/' + this.slug + '/' + 'subscribers' +'/';
+                    makeAjaxRequest('post', url)
+                        .then( response => {
+                           if(this.your_relation_status === 2){
+                               this.your_relation_status = 0;
+                           }else {
+                               this.your_relation_status = 2;
+                           }
+                        });
+                },
+                add_remove_friends(){
+                    url = '/user/' + this.slug + '/' + 'friends' +'/';
+                    makeAjaxRequest('post', url)
+                        .then( response => {
+                            if(this.your_relation_status === 4){
+                               this.your_relation_status = 3;
+                           }else {
+                               this.your_relation_status = 4;
+                           }
+                        });
+                },
+                block_unblock_user(){
+                    url = '/user/' + this.slug + '/block/';
+                    makeAjaxRequest('post', url)
+                        .then( response => {
+                            if(this.your_relation_status === 1){
+                                this.your_relation_status = 0;
+                            }else {
+                                this.your_relation_status = 1;
+                            }
+
+                        });
+                },
+
+                edit_description(){},
+                edit_profile_settings(){},
+
+                add_new_photo(){},
+                add_new_avatar(){},
+            },
+        });
+    </script>
+
+    {% if status < 5 %}
+        {% include 'posts/base_feed.html' with is_show_create=False%}
+    {% else %}
+        {% include 'posts/base_feed.html' with is_show_create=True%}
+    {% endif %}
+{% endblock %}
+
+
+
+
+{#{% if status != 5 %}#}
+{#   {% block creating_new %}#}
+{#   {% endblock %}#}
+{#{% endif %}#}

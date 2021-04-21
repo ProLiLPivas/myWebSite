@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    profile settings
+{% endblock %}
+
+
+{% block content %}
+    <div>
+
+    </div>
+    <div id='profile_settings'>
+        {%  include 'includes/profile/profile_settings_window.html' %}
+    </div>
+    <script  type="">
+        function makeAjaxRequest(method, url, data=null){
+            return axios({
+                method: method,
+                url: url,
+                data: data,
+                xsrfCookieName: 'csrftoken',
+                xsrfHeaderName: 'X-CSRFToken',
+                headers :{
+                    'Access-Control-Allow-Origin': '*',
+                    'X-Requested-With':'XMLHttpRequest'
+                },
+            });
+        }
+
+        new Vue({
+            el: '#profile_settings',
+            data: {
+                settings: {
+                    access_messaging: 0,
+                    access_posts: 0,
+                    access_about:0,
+                    access_albums: 0,
+                    access_images: 0,
+                    access_stats: 0,
+                }
+            },
+            created() {
+                console.log(1111);
+                 makeAjaxRequest('get', '/user/me/settings/')
+                    .then(response =>{
+                        console.log(response.data);
+                        this.settings = response.data;
+                    })
+            },
+
+            methods: {
+                update_settings(){
+                    var formData = new FormData();
+                    formData.append('access_messaging', this.settings.access_messaging);
+                    formData.append('access_posts', this.settings.access_posts);
+                    formData.append('access_about', this.settings.access_about);
+                    formData.append('access_albums', this.settings.access_albums);
+                    formData.append('access_images', this.settings.access_images);
+                    formData.append('access_stats', this.settings.access_stats);
+
+                    makeAjaxRequest('post', '/user/me/settings/', formData)
+                    .then(response => {})
+                },
+            }
+        });
+
+    </script>
+
+{% endblock %}
