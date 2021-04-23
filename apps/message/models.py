@@ -14,7 +14,7 @@ class Chat(models.Model):
     chat_image = models.ImageField(blank=True, null=True)
     last_message_id = models.IntegerField(null=True)
     # settings
-    see_messages = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
+    see_messages = models.IntegerField(choices=PERMISSIONS_TYPES, default=1) # remove
     send_messages = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)
     del_messages = models.IntegerField(choices=PERMISSIONS_TYPES, default=2)
     add_new_users = models.IntegerField(choices=PERMISSIONS_TYPES, default=1)

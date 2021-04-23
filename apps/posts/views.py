@@ -1,9 +1,56 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.forms import model_to_dict
 from django.views.generic import View
+
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
+from .serializers import *
+
 from apps.posts.utils.post_mixins import *
+
 from .forms import *
 from .models import *
+
+
+class APIFeed(APIView):
+
+    def get(self, request,):
+        queryset = Post.objects.filter(user__id=1)
+
+        serializer = FeedSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class APIPost(APIView):
+    def get(self, request, id):
+        queryset = Post.objects.filter(id=id)
+        serializer = SinglePostSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class APIComments(APIView):
+    def get(self, request, id):
+        queryset = Comment.objects.filter(post=id)
+        serializer = CommentsSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class APITags(APIView):
+    def get(self, request):
+        queryset = Tag.objects.all()
+        serializer = TagsListSerializer(queryset, many=True,)
+        return Response(serializer.data)
+
+
+class APITag(APIView):
+    def get(self, request, slug):
+        queryset = Post.objects.filter(tag__slug=slug)
+        serializer = FeedSerializer(queryset, context={'request': request})
+        return Response(serializer.data)
+
+
+
 
 
 class Feed(FeedMixin, View):

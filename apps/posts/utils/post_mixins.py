@@ -4,7 +4,7 @@ from django.shortcuts import render
 
 from apps.posts.models import Post
 from apps.posts.utils.post_utils import PostUtils, PostSerializer
-
+from apps.posts.serializers import FeedSerializer
 
 class FeedMixin:
     template = None
@@ -12,6 +12,7 @@ class FeedMixin:
     ordering = ('-date_publication',)
 
     def get(self, request, slug=''):  # feed # only friends # popular   # all
+
         if request.is_ajax():
             if slug and not self.query_parameters[1]:
                 query = Q((self.query_parameters[0], slug))

@@ -10,7 +10,7 @@ from apps.user_profile.models import UsersRelation
 
 
 def generate_slug(title):
-    generated_slug = slugify(title, allow_unicode=True)
+    generated_slug = slugify(title , allow_unicode=True)
     return generated_slug + '_' + str(int(time()))
 
 
@@ -24,20 +24,19 @@ class Post(models.Model):
         (4, 'Only Friends'),
         (5, 'Nobody')
     )
+    default_permission_settings = {'choices': PERMISSIONS_TYPES , 'default': 0}
 
-    title = models.CharField(max_length=150, db_index=True)
-    slug = models.SlugField(max_length=150, blank=True, unique=True)
-    body = models.TextField(blank=True, db_index=True)
+    title = models.CharField(max_length=150 , db_index=True)
+    slug = models.SlugField(max_length=150 , blank=True , unique=True)
+    body = models.TextField(blank=True , db_index=True)
     date_publication = models.DateTimeField(auto_now_add=True)
-    tag = models.ManyToManyField('Tag', blank=True, related_name='posts')
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default='1')
+    tag = models.ManyToManyField('Tag' , blank=True , related_name='posts')
+    user = models.ForeignKey(User , on_delete=models.CASCADE , default='1')
     likes_amount = models.IntegerField(default=0)
     comments_amount = models.IntegerField(default=0)
     reposts_amount = models.IntegerField(default=0)
     is_changed = models.BooleanField(default=False)
 
-    default_permission_settings = {'choices': PERMISSIONS_TYPES, 'default': 0}
-    #
     see_comments_permission = models.IntegerField(**default_permission_settings)
     comment_permission = models.IntegerField(**default_permission_settings)
     like_permission = models.IntegerField(**default_permission_settings)
@@ -46,39 +45,38 @@ class Post(models.Model):
     see_author_permission = models.IntegerField(**default_permission_settings)
     see_post_permission = models.IntegerField(**default_permission_settings)
 
-
     def get_absolute_url(self):
         return reverse('read_post_url', kwargs={'slug': self.id})
 
     def get_comments_url(self):
-        return reverse('comment_url', kwargs={'id': self.id})
+        return reverse('comment_url' , kwargs={'id': self.id})
 
-    def get_get_relations_status(self, user: User) -> int:
+    def get_relations_status(self, user: User) -> int:
         return UsersRelation.objects.get_or_create(
-            main_user_profile=self.user.profile,
-            secondary_user_profile=user.profile
-        ).get_relations_status()
+            main_user_profile=user.profile,
+            secondary_user_profile=self.user.profile
+        )[0].get_relations_status()
 
-    def get_permissions_dict(self, user) -> Dict[str, bool]:
-        permission = self.get_get_relations_status(user)
+    def is_post_accessible(self, user: User) -> bool:
+        relation_status = self.get_relations_status(user)
+        return not (relation_status < self.see_post_permission)
+
+    def get_statistic_permissions_dict(self, permission=None) -> Dict[str, bool]:
         return {
-            'see_profile_permission':  True,
-            'see_post_permission': self.see_post_permission <= permission,
-            'see_author_permission': self.see_author_permission <= permission,
             'see_statistic_permission': self.see_statistic_permission <= permission,
             'like_permission': self.like_permission <= permission,
+            'see_comments': self.see_comments_permission <= permission,
             'comment_permission': self.comment_permission <= permission,
             'repost_permission': self.repost_permission <= permission,
         }
 
-    def save(self, *args, **kwargs):
+    def save(self , *args , **kwargs):
         if not self.id:
             self.slug = generate_slug(self.title)
-        super().save(*args, **kwargs)
+        super().save(*args , **kwargs)
 
     def __str__(self):
         return self.title
-
 
     class Meta:
         ordering = ['-date_publication']
@@ -86,19 +84,20 @@ class Post(models.Model):
 
 class Tag(models.Model):
     title = models.CharField(max_length=150)
-    slug = models.SlugField(max_length=150, blank=True)
+    slug = models.SlugField(max_length=150 , blank=True)
+
     # user = models.ForeignKey(User, blank=True, on_delete=models.CASCADE)
 
     def get_absolute_url(self):
-        return reverse('read_tag_url', kwargs={'slug' : self.title})
+        return reverse('read_tag_url' , kwargs={'slug': self.title})
 
-    def length(self):
+    def __len__(self):
         return len(Post.objects.filter(tag__id=self.id))
 
-    def save(self, *args, **kwargs):
+    def save(self , *args , **kwargs):
         if not self.id:
             self.slug = self.title
-        super().save(*args, **kwargs)
+        super().save(*args , **kwargs)
 
     def __str__(self):
         return self.title
@@ -108,21 +107,35 @@ class Tag(models.Model):
 
 
 class Comment(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    post = models.ForeignKey(Post, on_delete=models.CASCADE,)
+    user = models.ForeignKey(User , on_delete=models.CASCADE)
+    post = models.ForeignKey(Post , on_delete=models.CASCADE , )
     text = models.TextField()
     time = models.TimeField(auto_now_add=True)
     likes_amount = models.IntegerField(default=0)
     is_changed = models.BooleanField(default=False)
 
-
     class Meta:
         ordering = ['-time']
 
 
-class Like(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE, default='1')
-    post = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
-    comment = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True)
-    exist = models.BooleanField(default=False)
+class BaseLike(models.Model):
 
+    obj = None
+    user = models.ForeignKey(User , on_delete=models.CASCADE , default='1')
+    is_exist = models.BooleanField(default=False)
+
+    @classmethod
+    def get_is_liked(cls, obj, user):
+        like: cls = cls.objects.filter(obj=obj, user=user)
+        if like:
+            if like.is_exist:
+                return True
+        return False
+
+
+class PostLike(BaseLike):
+    obj = models.ForeignKey(Post, on_delete=models.CASCADE, null=True)
+
+
+class CommentLike(BaseLike):
+    obj = models.ForeignKey(Comment, on_delete=models.CASCADE, null=True)

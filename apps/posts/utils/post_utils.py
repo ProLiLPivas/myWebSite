@@ -198,12 +198,12 @@ class PostSerializer:
 
                 if post.see_statistic_permission <= permission:
                     if post.like_permission <= permission:
-                        like = Like.objects.filter(post__id=post_dict['id'], user=user)
-                        if like:
-                            if like[0].exist:
-                                post_dict['is_liked'] = True
-                        else:
-                            post_dict['is_liked'] = False
+                        like = 0 # = Like.objects.filter(post__id=post_dict['id'], user=user)
+                        # if like:
+
+                        post_dict['is_liked'] = True
+                        # else:
+                        #     post_dict['is_liked'] = False
                         # if post.like_permission <= permission:
                         #     post_dict['is_liked'] = False
                         #     post_dict['likes_amount'] = 0
