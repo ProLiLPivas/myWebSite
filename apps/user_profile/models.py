@@ -15,7 +15,7 @@ class Profile(models.Model):
     )
     default_permission_settings = {'choices': PERMISSIONS_TYPES, 'default': 0}
 
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User,  on_delete=models.CASCADE)
     slug = models.SlugField(max_length=50, default='')
     is_online = models.BooleanField(default=True)
     avatar = models.ImageField(blank=True, null=True)
@@ -32,7 +32,6 @@ class Profile(models.Model):
     access_images = models.IntegerField(**default_permission_settings)
     access_stats = models.IntegerField(**default_permission_settings)
 
-
     def __str__(self):
         return self.user.username
 
@@ -42,10 +41,18 @@ class Profile(models.Model):
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
-        return reverse('user_profile_url', kwargs={'slug' : self.slug})
+        if self.slug:
+            return reverse('user_profile_url', kwargs={'slug': self.slug})
+        return reverse('user_profile_url', kwargs={'slug': 'id' + self.pk})
 
     def get_chat_url(self):
         return reverse('private_chat_url', kwargs={'id': self.user.id})
+
+    def get_relations_status(self, user: User):
+        return UsersRelation.objects.get_or_create(
+            main_user_profile=user.profile,
+            secondary_user_profile=self
+        )[0].get_relations_status()
 
 
 class UsersRelation(models.Model):
@@ -66,7 +73,6 @@ class UsersRelation(models.Model):
     def save(self, **kwargs):
 
         super().save(**kwargs)
-
         if not self.related_object:
             relation_two = UsersRelation.objects.create(
                 main_user_profile=self.secondary_user_profile,

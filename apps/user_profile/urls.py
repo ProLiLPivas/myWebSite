@@ -4,7 +4,7 @@ from .views import *
 
 urlpatterns = [
 
-    path('all/', All.as_view(), name='all_users_list_url'),
+    # path('all/', All.as_view(), name='all_users_list_url'),
     path('me/', MyProfile.as_view(), name='get_my_profile'),
     path('me/settings/', ProfileSettings.as_view(), name='profile_settings'),
     path('subscribers/', Subscribers.as_view(), name='subscribers_url'),
@@ -20,6 +20,12 @@ urlpatterns = [
     path('<str:slug>/block/', BlackList.as_view(), name='blacklist_url'),
 
 
+    path('<str:slug>/api/', APIUserProfile.as_view(), ),
+    path('me/settings/api/', APIProfileSettings.as_view(), ),
+    path('subscribers/<int:id>api/', APISubscribersList.as_view(),),
+    path('subscriptions/<int:id>api/', APISubscriptionsList.as_view(), ),
+    path('friends/<int:id>api/', APIFriendsList.as_view(), ),
+    path('blacklist/api/', APIBlackList.as_view(), ),
 
 
 

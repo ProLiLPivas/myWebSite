@@ -1,17 +1,86 @@
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views import View
+from rest_framework.response import Response
+
+from rest_framework.views import APIView
 
 from apps.user_profile.forms import ProfileSettingsForm
 from apps.user_profile.utils.profile_utils import *
 from apps.user_profile.utils.relations_mixixns import RelatedUsersView
 from apps.posts.utils.post_mixins import FeedMixin
+from .serializers import *
+
 
 
 class All(View):
     def get(self, request):
         pass
         # return render(request, 'profile/search.html', context={'users': Profile.objects.all()})
+
+
+class APIUserProfile(APIView):
+    def get(self, request, slug):
+        queryset = Profile.objects.filter(slug=slug)
+        serializer = ProfileSerializer(queryset , many=True,
+                                    context={'request': request})
+        return Response(serializer.data)
+
+
+class APIFriendsList(APIView):
+    def get(self, request, id=None):
+        if not id:
+            id = request.user.id
+        rel = UsersRelation.objects.filter(
+            main_user_profile=id, is_friends=True)
+        queryset = [r.secondary_user_profile for r in rel]
+        serializer = RelatedUsersSerializer(
+            queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class APISubscribersList(APIView):
+
+    def get(self, request, id):
+        rel = UsersRelation.objects.filter(
+            secondary_user_profile=id, is_subscribed=True)
+        queryset = [r.main_user_profile for r in rel]
+        serializer = RelatedUsersSerializer(
+            queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class APISubscriptionsList(APIView):
+    def get(self, request, id):
+        rel = UsersRelation.objects.filter(
+            secondary_user_profile=id, is_subscribed=True)
+        queryset = [r.main_user_profile for r in rel]
+        serializer = RelatedUsersSerializer(
+            queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class APIBlackList(APIView):
+
+    def get(self, request):
+        rel = UsersRelation.objects.filter(
+            main_user_profile__user=request.user, is_blocked=True)
+        queryset = [r.secondary_user_profile for r in rel]
+        serializer = RelatedUsersSerializer(
+            queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class APIProfileSettings(APIView):
+    def get(self , request):
+        queryset = Profile.objects.get(user=request.user)
+        serializer = ProfileSettingsSerializer(queryset)
+        return Response(serializer.data)
+
+
+
+
+
 
 
 class UserProfile(FeedMixin, View):
