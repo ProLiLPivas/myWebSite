@@ -8,7 +8,7 @@ from rest_framework.response import Response
 from .serializers import *
 
 from apps.posts.utils.post_mixins import *
-
+from apps.message.views import APIChatsList
 from .forms import *
 from .models import *
 
@@ -50,7 +50,8 @@ class APITag(APIView):
         return Response(serializer.data)
 
 
-
+class APIRepost(APIChatsList):
+    pass
 
 
 class Feed(FeedMixin, View):

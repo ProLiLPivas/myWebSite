@@ -14,4 +14,9 @@ urlpatterns = [
     path('msg/update/', UpdateMessage.as_view(), name='upd_msg_url'),
     # path('message/resend/'),
 
+    path('api/', APIChatsList.as_view()),
+    path('new/api/', APINewChat.as_view(),),
+    path('id=<int:id>/api/', APIPrivateChat.as_view(),),
+    path('chat=<int:id>/api/', APIPublicChat.as_view(),),
+
 ]

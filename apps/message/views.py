@@ -1,7 +1,46 @@
 from django.shortcuts import render, redirect
 from django.views import View
+from rest_framework.response import Response
+from rest_framework.views import APIView
 
+from apps.user_profile.views import APIFriendsList
 from .utils import *
+from .serializers import *
+
+class APIBaseChat(APIView):
+
+    second_query_parameter = None
+
+    def get_queryset(self, request, id):
+        second_query = Q((self.second_query_parameter, id))
+        return Connection2Chat.objects.get(
+            Q(('user', request.user)), second_query).chat
+
+    def get(self, request, id):
+        queryset = self.get_queryset(request, id)
+        serializer = ChatSerializer(queryset, context={'request': request})
+        return Response(serializer.data)
+
+
+class APIPrivateChat(APIBaseChat):
+    second_query_parameter = 'recipient'
+
+
+class APIPublicChat(APIBaseChat):
+    second_query_parameter = 'chat_num'
+
+
+class APIChatsList(APIView):
+    def get(self, request):
+        queryset = [con.chat for con in Connection2Chat.objects.filter(user=request.user)]
+        serializer = ChatsListSerializer(queryset, many=True, context={'request': request})
+        return Response(serializer.data)
+
+class APINewChat(APIFriendsList):
+    pass
+
+class APIAddUserToChat(APIFriendsList):
+   pass
 
 
 class MessagesLit(View):
