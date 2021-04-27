@@ -1,12 +1,34 @@
-from django.http import JsonResponse, HttpResponse
-from django.shortcuts import render
-from rest_framework import serializers
 from django.db.models import Q
+from rest_framework import serializers
 
-# from apps.user_profile.models import Profile
-from apps.posts.forms import *
 from apps.posts.models import *
-from apps.user_profile.models import Profile
+# from apps.posts.utils import
+
+
+def update_tags(instance: Post, tags: str):
+    query = Q()
+    for tag in tags:
+        query = query | Q(title=tag)
+    instance.tag.remove(*list(instance.tag.exclude(query)))
+    existing_tags = list(instance.tag.all().values('title'))
+    for tag in tags:
+        if not {'title': tag} in existing_tags:
+
+            instance.tag.get_or_create(title=tag)
+
+
+def get_relation_statuses_dict(instance, requested_from):
+    users = list(set([post.user for post in instance]))
+    relation_statuses_dict = {}
+    for user in users:
+        relation_status = UsersRelation.objects.get_or_create(
+            main_user_profile=requested_from.profile,
+            secondary_user_profile=user.profile
+        )[0].get_relations_status()
+        if relation_status < user.profile.access_posts:
+            continue
+        relation_statuses_dict.update({user: relation_status})
+    return relation_statuses_dict
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,7 +47,6 @@ class UserSerializer(serializers.ModelSerializer):
         if obj.profile.avatar:
             return obj.profile.avatar
         return None
-
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -90,7 +111,8 @@ class FeedSerializer(serializers.ModelSerializer):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.requested_from: User = self.context['request'].user
-        self.relation_statuses_dict = self.get_relation_statuses_dict()
+        self.relation_statuses_dict = \
+            get_relation_statuses_dict(self.instance, self.requested_from)
 
     class Meta:
         model = Post
@@ -108,7 +130,8 @@ class FeedSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance: Post):
-        if not self.relation_statuses_dict.get(instance.user):
+        relation_status = self.relation_statuses_dict.get(instance.user)
+        if not relation_status and relation_status != 0:
             return
         if not instance.is_post_accessible(self.requested_from):
             return
@@ -144,19 +167,6 @@ class FeedSerializer(serializers.ModelSerializer):
 
     def get_permission_settings(self, obj):
         return PostSettingsSerializer(obj).data
-
-    def get_relation_statuses_dict(self):
-        users = list(set([post.user for post in self.instance]))
-        relation_statuses_dict = {}
-        for user in users:
-            relation_status = UsersRelation.objects.get(
-                main_user_profile=self.requested_from.profile,
-                secondary_user_profile=user.profile
-            ).get_relations_status()
-            if relation_status < user.profile.access_posts:
-                continue
-            relation_statuses_dict.update({user: relation_status})
-        return relation_statuses_dict
 
 
 class SinglePostSerializer(FeedSerializer):
@@ -203,20 +213,8 @@ class UpdateSerializer(serializers.ModelSerializer):
 
     def update(self, instance, validated_data):
         validated_data.update(self.context.get('permission_settings'))
-        UpdateSerializer.update_tags(instance, self.context.get('tags'))
-        i = super().update(instance, validated_data)
-        return i
-
-    @staticmethod
-    def update_tags(instance, tags):
-        query = Q()
-        for tag in tags:
-            query = query | Q(title=tag)
-        instance.tag.remove(*list(instance.tag.exclude(query)))
-        existing_tags = list(instance.tag.all().values('title'))
-        for tag in tags:
-            if not {'title': tag} in existing_tags:
-                instance.tag.get_or_create(title=tag)
+        update_tags(instance, self.context.get('tags'))
+        return super().update(instance, validated_data)
 
 
 class CreateCommentSerializer(serializers.ModelSerializer):
@@ -229,20 +227,3 @@ class CreateCommentSerializer(serializers.ModelSerializer):
         comment = Comment.objects.create(**validated_data)
         return comment
 
-
-a = {"text": "1111"}
-
-b = {
-    "permission_settings": {
-        "see_comments_permission": 3,
-        "comment_permission": 2,
-        "like_permission": 1,
-        "repost_permission": 0,
-        "see_statistic_permission": 0,
-        "see_author_permission": 0,
-        "see_post_permission": 1
-    },
-    "tags": "0,1336",
-    "title": "111",
-    "body": "_ . _ . _"
-}

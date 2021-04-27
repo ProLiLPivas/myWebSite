@@ -4,6 +4,59 @@ from django.forms import model_to_dict
 from apps.user_profile.models import Profile, UsersRelation
 
 
+def subscribe_or_unsubscribe(relation_obj: UsersRelation):
+    # _ must be here without it dont work
+    sub_changes = (+1 , -1)[relation_obj.is_subscribed]
+
+    relation_obj.is_subscribed = not relation_obj.is_subscribed
+    relation_obj.main_user_profile.subscriptions += sub_changes
+    relation_obj.secondary_user_profile.subscribers += sub_changes
+
+    relation_obj.main_user_profile.save()
+    relation_obj.secondary_user_profile.save()
+    relation_obj.save()
+
+
+def add_or_remove_friends(relation_obj: UsersRelation):
+    subscribe_or_unsubscribe(relation_obj)
+    sub_changes = (+1 , -1)[relation_obj.is_friends]
+
+    relation_obj.is_friends = not relation_obj.is_friends
+    relation_obj.related_object.is_friends = not relation_obj.related_object.is_friends
+    relation_obj.main_user_profile.friends += sub_changes
+    relation_obj.secondary_user_profile.friends += sub_changes
+
+    relation_obj.main_user_profile.save()
+    relation_obj.secondary_user_profile.save()
+    relation_obj.save()
+    relation_obj.related_object.save()
+
+
+def block_unblock_user(relation_obj: UsersRelation):
+    print(not relation_obj.related_object.is_blocked)
+    relation_obj.related_object.is_blocked = not relation_obj.related_object.is_blocked
+    print(relation_obj.related_object.is_blocked)
+    relation_obj.related_object.save()
+
+
+def change_relations_status(slug: str, your_profile: Profile) -> bool:
+    relation_obj = UsersRelation.objects.get(
+        main_user_profile=your_profile, secondary_user_profile__slug=slug)
+    relation_status = relation_obj.get_relations_status()
+    if relation_status != -1:
+        if relation_status == 0 or relation_status == 2:
+            subscribe_or_unsubscribe(relation_obj)
+        elif relation_status == 4 or relation_status == 3:
+            add_or_remove_friends(relation_obj)
+        elif relation_status != -1:
+            block_unblock_user(relation_obj)
+        return True
+    return False
+
+
+
+
+
 def get_profile_and_relations(slug, your_profile):
     profile = Profile.objects.get(slug__iexact=slug)
     relation = UsersRelation.objects.get_or_create(
@@ -47,42 +100,4 @@ def relation_to_dict(relation):
     return []
 
 
-def subscribe_or_unsubscribe(_, relation_obj):
-    # _ must be here without it dont work
-    sub_changes = (+1 , -1)[relation_obj.is_subscribed]
 
-    relation_obj.is_subscribed = not relation_obj.is_subscribed
-    relation_obj.main_user_profile.subscriptions += sub_changes
-    relation_obj.secondary_user_profile.subscribers += sub_changes
-
-    relation_obj.main_user_profile.save()
-    relation_obj.secondary_user_profile.save()
-    relation_obj.save()
-
-
-def add_or_remove_friends(_, relation_obj):
-    # _ must be here without it dont work
-    subscribe_or_unsubscribe(_ , relation_obj)
-    sub_changes = (+1 , -1)[relation_obj.is_friends]
-
-    relation_obj.is_friends = not relation_obj.is_friends
-    relation_obj.related_object.is_friends = not relation_obj.related_object.is_friends
-    relation_obj.main_user_profile.friends += sub_changes
-    relation_obj.secondary_user_profile.friends += sub_changes
-
-    relation_obj.main_user_profile.save()
-    relation_obj.secondary_user_profile.save()
-    relation_obj.save()
-    relation_obj.related_object.save()
-
-
-def block_unblock_user(_, relation_obj):
-    # _ must be here without it dont work
-    relation_obj.related_object.is_blocked = not relation_obj.is_blocked
-    relation_obj.save()
-
-
-def change_relations_status(func_obj, slug, users_profile):
-    relation_with_you = UsersRelation.objects.get(
-        main_user_profile=users_profile, secondary_user_profile__slug=slug)
-    func_obj(relation_with_you)

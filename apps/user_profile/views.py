@@ -1,22 +1,18 @@
-from django.http import JsonResponse
-from django.shortcuts import render, redirect
 from django.views import View
-from rest_framework.response import Response
 
+from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from apps.user_profile.forms import ProfileSettingsForm
-from apps.user_profile.utils.profile_utils import *
-from apps.user_profile.utils.relations_mixixns import RelatedUsersView
-from apps.posts.utils.post_mixins import FeedMixin
+from apps.user_profile.forms import ProfileSettingsForm #
+from apps.user_profile.utils.profile_utils import *  #
+from apps.user_profile.utils.relations_mixixns import RelatedUsersView #
+from apps.posts.utils.post_mixins import FeedMixin  #
 from .serializers import *
 
 
-
-class All(View):
+class MyProfile(View):
     def get(self, request):
-        pass
-        # return render(request, 'profile/search.html', context={'users': Profile.objects.all()})
+        return redirect(request.user.profile.get_absolute_url())
 
 
 class APIUserProfile(APIView):
@@ -26,56 +22,108 @@ class APIUserProfile(APIView):
                                     context={'request': request})
         return Response(serializer.data)
 
+    def post(self, request, slug):
+        if slug != request.user.profile.slug:
+            if change_relations_status(slug, request.user.profile):
+                return Response(200)
+        return Response(403)
 
-class APIFriendsList(APIView):
-    def get(self, request, id=None):
-        if not id:
-            id = request.user.id
-        rel = UsersRelation.objects.filter(
-            main_user_profile=id, is_friends=True)
-        queryset = [r.secondary_user_profile for r in rel]
-        serializer = RelatedUsersSerializer(
-            queryset, many=True, context={'request': request})
-        return Response(serializer.data)
-
-
-class APISubscribersList(APIView):
-
-    def get(self, request, id):
-        rel = UsersRelation.objects.filter(
-            secondary_user_profile=id, is_subscribed=True)
-        queryset = [r.main_user_profile for r in rel]
-        serializer = RelatedUsersSerializer(
-            queryset, many=True, context={'request': request})
-        return Response(serializer.data)
-
-
-class APISubscriptionsList(APIView):
-    def get(self, request, id):
-        rel = UsersRelation.objects.filter(
-            secondary_user_profile=id, is_subscribed=True)
-        queryset = [r.main_user_profile for r in rel]
-        serializer = RelatedUsersSerializer(
-            queryset, many=True, context={'request': request})
-        return Response(serializer.data)
-
-
-class APIBlackList(APIView):
-
-    def get(self, request):
-        rel = UsersRelation.objects.filter(
-            main_user_profile__user=request.user, is_blocked=True)
-        queryset = [r.secondary_user_profile for r in rel]
-        serializer = RelatedUsersSerializer(
-            queryset, many=True, context={'request': request})
-        return Response(serializer.data)
+    def patch(self, request, slug=None):
+        if slug == request.user.profile.slug:
+            isinstance = Profile.objects.get(user=request.user)
+            serializer = EditProfileSerializer(instance=isinstance , data=request.data)
+            if serializer.is_valid():
+                serializer.save()
+                return Response(status=200)
+            return Response(status=400)
+        return Response(status=403)
 
 
 class APIProfileSettings(APIView):
-    def get(self , request):
+
+    def get(self, request):
         queryset = Profile.objects.get(user=request.user)
         serializer = ProfileSettingsSerializer(queryset)
         return Response(serializer.data)
+
+    def put(self, request):
+        queryset = Profile.objects.get(user=request.user)
+        serializer = ProfileSettingsSerializer(instance=queryset, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=200)
+        return Response(status=400)
+
+
+class BaseRelatedUsersView(APIView):
+
+    queryset = None
+    get_query_set_method = None
+
+    def get_query_set(self, request=None, id=None):
+        if self.get_query_set_method:
+            self.get_query_set_method(request, id)
+
+    def get(self, request, id=None):
+        if not id:
+            id = request.user.id
+        self.get_query_set(request=request, id=id)
+        serializer = RelatedUsersSerializer(
+            self.queryset , many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class APIFriendsList(BaseRelatedUsersView):
+
+    get_query_set_method = None
+
+    def get_query_set(self, request=None, id=None):
+        rel = UsersRelation.objects.filter(
+            main_user_profile=id , is_friends=True)
+        self.queryset = [r.secondary_user_profile for r in rel]
+
+
+class APISubscribersList(BaseRelatedUsersView):
+
+    get_query_set_method = None
+
+    def get_query_set(self, request=None, id=None):
+        rel = UsersRelation.objects.filter(
+            secondary_user_profile=id, is_subscribed=True)
+        self.queryset = [r.main_user_profile for r in rel]
+
+
+class APISubscriptionsList(BaseRelatedUsersView):
+
+    get_query_set_method = None
+
+    def get_query_set(self, request=None, id=None):
+        rel = UsersRelation.objects.filter(
+            secondary_user_profile=id, is_subscribed=True)
+        self.queryset = [r.main_user_profile for r in rel]
+
+
+class APIBlackList(BaseRelatedUsersView):
+
+    get_query_set_method = None
+
+    def get_query_set(self, request=None, id=None):
+        rel = UsersRelation.objects.filter(
+            secondary_user_profile=request.user.id, is_blocked=True)
+        self.queryset = [r.main_user_profile for r in rel]
+
+class APIBlockUser(APIView):
+
+    def post(self, request, id):
+        if request.user.id == id:
+            print(request.user.id)
+            return Response({'ты': 'долбаеб?'}, status=400)
+        relation_obj = UsersRelation.objects.get(
+            main_user_profile=request.user.profile , secondary_user_profile=id)
+        block_unblock_user(relation_obj)
+        return Response(status=200)
+
+
 
 
 
@@ -93,11 +141,6 @@ class UserProfile(FeedMixin, View):
         else:
             context = get_profile_context(slug, request.user.profile, request.path)
             return render(request, self.template, context=context)
-
-
-class MyProfile(View):
-    def get(self, request):
-        return redirect('/user/' + request.user.profile.slug)
 
 
 class ProfileSettings(View):

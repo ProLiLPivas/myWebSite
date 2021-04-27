@@ -36,8 +36,10 @@ class Profile(models.Model):
         return self.user.username
 
     def save(self, *args, **kwargs):
-        self.slug = 'id{}'.format(self.user_id)
-        UsersRelation(main_user_profile=self, secondary_user_profile=self)
+        if not self.id:
+            self.slug = 'id{}'.format(self.user_id)
+            UsersRelation.objects.create(
+                main_user_profile=self, secondary_user_profile=self)
         super().save(*args, **kwargs)
 
     def get_absolute_url(self):
@@ -71,30 +73,30 @@ class UsersRelation(models.Model):
             'private_chat_url', kwargs={'id': self.secondary_user_profile.id})
 
     def save(self, **kwargs):
-
         super().save(**kwargs)
-        if not self.related_object:
-            relation_two = UsersRelation.objects.create(
-                main_user_profile=self.secondary_user_profile,
-                secondary_user_profile=self.main_user_profile,
-                related_object=self
-            )
-            self.related_object = relation_two
-            self.save()
+        if self.secondary_user_profile != self.main_user_profile:
+            if not self.related_object:
+                relation_two = UsersRelation.objects.create(
+                    main_user_profile=self.secondary_user_profile,
+                    secondary_user_profile=self.main_user_profile,
+                    related_object=self
+                )
+                self.related_object = relation_two
+                self.save()
 
     def get_relations_status(self) -> int:
         if self.main_user_profile == self.secondary_user_profile:
             return 5  # its u
+        elif self.related_object.is_blocked:
+            return 1  # u block this user
+        elif self.is_blocked:
+            return -1  # u blocked by this person
         elif self.is_friends:
             return 4  # u r friends
         elif self.related_object.is_subscribed:
             return 3  # this is ur subscriber
         elif self.is_subscribed:
             return 2  # this is ur subscription
-        elif self.related_object.is_blocked:
-            return 1  # u block this user
-        elif self.is_blocked:
-            return -1  # u blocked by this person
         else:
             return 0  # this person u don't know
 

@@ -6,6 +6,14 @@ from apps.user_profile.models import Profile, UsersRelation
 from apps.posts.forms import *
 
 
+def like_object(obj: (BaseLike, bool)):
+    if obj[1]:
+        return
+    obj[0].is_exist = not obj[0].is_exist
+    obj[0].save()
+    return
+
+
 class PostUtils:
     ''' '''
     @staticmethod

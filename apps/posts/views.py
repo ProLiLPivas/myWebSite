@@ -8,17 +8,10 @@ from rest_framework.generics import CreateAPIView
 from .serializers import *
 
 from apps.posts.utils.post_mixins import *
+from apps.posts.utils.post_utils import *
 from apps.message.views import APIChatsList
 from .forms import *
 from .models import *
-
-
-def like_object(obj):
-    if obj[1]:
-        return
-    obj[0].is_exist = not obj[0].is_exist
-    obj[0].save()
-    return
 
 
 class APIPostsList(APIView):
