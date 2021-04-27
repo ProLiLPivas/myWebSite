@@ -6,6 +6,7 @@ from django.db.models import Q
 # from apps.user_profile.models import Profile
 from apps.posts.forms import *
 from apps.posts.models import *
+from apps.user_profile.models import Profile
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -24,6 +25,8 @@ class UserSerializer(serializers.ModelSerializer):
         if obj.profile.avatar:
             return obj.profile.avatar
         return None
+
+
 
 class TagSerializer(serializers.ModelSerializer):
 
@@ -77,7 +80,7 @@ class FeedSerializer(serializers.ModelSerializer):
     requested_from: User = None
     relation_statuses_dict: dict = None
 
-    user = UserSerializer()
+    user = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
     is_liked = serializers.SerializerMethodField()
     post_statistic = serializers.SerializerMethodField()
@@ -92,7 +95,6 @@ class FeedSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         exclude = (
-            'slug',
             'likes_amount',
             'comments_amount',
             'reposts_amount',
@@ -169,212 +171,78 @@ class SinglePostSerializer(FeedSerializer):
         ).data
 
 
-def parseTags(tags_text):
-            tag = ''
-            tags = []
-            for symbol in tags_text:
-                if not symbol == ',':
-                    tag += symbol
-                else:
-                    tags.append(tag)
-                    tag = ''
-            tags.append(tag)
-            return tags
+class CreatePostSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Post
+        fields = ('title', 'body',)
+
+    def create(self, validated_data):
+        validated_data.update(self.context.get('user'))
+        validated_data.update(self.context.get('permission_settings'))
+        post = Post.objects.create(**validated_data)
+        for tag in self.context.get('tags'):
+            post.tag.add(Tag.objects.get_or_create(title=tag)[0])
+        return post
 
 
+class UpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Post
+        fields = (
+            'title',
+            'body',
+            'see_comments_permission',
+            'comment_permission',
+            'like_permission',
+            'repost_permission',
+            'see_statistic_permission',
+            'see_author_permission',
+            'see_post_permission',
+        )
 
-
-
-
-
-class FeedMixin:
-    template = None
-    query_parameters = Q()
-    ordering = ('-date_publication',)
-
-    def get(self, request, slug=''):  # feed # only friends # popular   # all
-        if request.is_ajax():
-            if slug and not self.query_parameters[1]:
-                query = Q((self.query_parameters[0], slug))
-            else:
-                query = Q(self.query_parameters)
-            posts = Post.objects.filter(query).order_by(*self.ordering)
-            feed_dict = {}
-            users_dict = {'id': request.user.id, 'username': request.user.username,  'is_staff': request.user.is_staff}
-            print(JsonResponse({'posts': feed_dict, 'user': users_dict, 'url': request.path}, status=200))
-            return JsonResponse({'posts': feed_dict, 'user': users_dict, 'url': request.path}, status=200)
-        return render(request, self.template, context={'url': request.path, 'slug': slug})
-
-
-
-
-
-
-
-
-
-class LikeMixin:
-    model = None
-
-    def post(self, request):
-        like, model_obj = PostUtils.chose_instance(request.POST['object_id'], request.user, self.model)
-        response = PostUtils.like_object(like, model_obj)
-        if response:
-            return JsonResponse(response, status=200)
-        else:
-            return HttpResponse(status=403)
-
-
-
-
-
-class PostUtils:
-    ''' '''
-    @staticmethod
-    def create_post(data, user):
-        bound_form = PostForm(data)
-        if bound_form.is_valid():
-            new_post = bound_form.save(commit=False)
-            new_post.user = user
-            profile = user.profile
-            profile.posts += 1
-            profile.save()
-            new_post.save()
-            return new_post
+    def update(self, instance, validated_data):
+        validated_data.update(self.context.get('permission_settings'))
+        UpdateSerializer.update_tags(instance, self.context.get('tags'))
+        i = super().update(instance, validated_data)
+        return i
 
     @staticmethod
-    # def create_or_get_tags(t, new_obj):
-    #     tags = PostSerializer.parseTags(t)
-    #     tags_dict = []
-    #     if tags != ['']:
-    #         for tag in tags:
-    #             new_tag = Tag.objects.get_or_create(title=tag.__str__())
-    #             new_obj.tag.add(new_tag[0])
-    #             tags_dict.append(model_to_dict(new_tag[0]))
-    #     return tags_dict
-
-    @staticmethod
-    def update_post(data, post_id, user):
-        post = Post.objects.get(id=post_id)
-        if post.user == user:
-            bound_form = PostForm(data, instance=post)
-
-            if bound_form.is_valid():
-                new_obj = bound_form.save()
-                new_obj.is_changed = True
-                new_obj.save()
-                return new_obj, 200
-        return None, 403
-
-    @staticmethod
-    def del_post(id , user):
-        """
-        :param id:
-        :param user:
-        :return:
-        """
-        obj = Post.objects.get(id=int(id))
-        if user == obj.user or user.is_staff:
-                user_object = Profile.objects.get(id=user.id)
-                user_object.posts -= 1
-                user_object.save()
-                obj.delete()
-                return {'posts_amount': user_object.posts}
-        else:
-            return None
-
-    @staticmethod
-    def create_comment(bound_form, user, id):
-        """
-        :param bound_form:
-        :param user:
-        :param id:
-        :return:
-        """
-        post = Post.objects.get(id=id)
-        if  post.comment_permission <= PostUtils.get_permission(post, user):
-            if bound_form.is_valid():
-                new_comment = bound_form.save(commit=False)
-                if new_comment.text != 'null':
-                    post.comments_amount += 1
-                    new_comment.post = post
-                    new_comment.user = user
-                    new_comment.save()
-                    post.save()
-                    # return PostSerializer.new_comment_to_dict(new_comment, post.comments_amount,  user), 200
-            return None, 403
-        return None, 403
+    def update_tags(instance, tags):
+        query = Q()
+        for tag in tags:
+            query = query | Q(title=tag)
+        instance.tag.remove(*list(instance.tag.exclude(query)))
+        existing_tags = list(instance.tag.all().values('title'))
+        for tag in tags:
+            if not {'title': tag} in existing_tags:
+                instance.tag.get_or_create(title=tag)
 
 
-    @staticmethod
-    def update_comment(comment_id, text, user):
-        com_obj = Comment.objects.get(id=comment_id)
-        if com_obj.user == user:
-            bound_form = CommentForm({'text': text}, instance=com_obj)
-            if bound_form.is_valid():
-                comment = bound_form.save(commit=False)
-                comment.is_changed = True
-                comment.save()
-                return text, 200
+class CreateCommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ('text',)
 
-    @staticmethod
-    def del_comment(id, post_id, user):
-        obj = Comment.objects.get(id=int(id))
-        post_object = Post.objects.get(id=int(post_id))
-        if user == obj.user or user == post_object.user or user.is_staff:
-            post_object.comments_amount -= 1
-            post_object.save()
-            obj.delete()
-            return {'comment_amount': post_object.comments_amount}
-        else: return None
-
-    @staticmethod
-    def like_object(like, model_obj):
-        if like != 0 and model_obj != 0:
-            if not like.exist:
-                like.exist = True
-                model_obj.likes_amount += 1
-            else:
-                like.exist = False
-                model_obj.likes_amount -= 1
-            like.save()
-            model_obj.save()
-            return {'is_liked': like.exist, 'amount': model_obj.likes_amount}
-        else: return []
-
-    @staticmethod
-    def chose_instance(id, user, model):
-        model_obj = model.objects.get(id=int(id))
-        if model == Post:
-            if model_obj.like_permission <= PostUtils.get_permission(model_obj, user):
-                return (Like.objects.get_or_create(user=user, post=model_obj))[0], model_obj
-            else: return 0, 0
-        elif model == Comment:
-            return (Like.objects.get_or_create(user=user, comment=model_obj))[0], model_obj
-        else:
-            return None, None
-
-    @staticmethod
-    def repost(post, user):
-        if post.repost_permission <= PostUtils.get_permission(post, user):
-            pass
+    def create(self, validated_data):
+        validated_data.update(self.context)
+        comment = Comment.objects.create(**validated_data)
+        return comment
 
 
-    @staticmethod
-    def get_permission(post, user):
-        return UsersRelation.get_or_create_relations(
-            post.user.profile, user.profile).get_relations_status()
+a = {"text": "1111"}
 
-
-    @staticmethod
-    def set_post_permissions(data, user):
-        post = Post.objects.get(id=int(data['post_id']))
-        if post.user == user:
-            bound_form = PostSettingsForm(data, instance=post)
-            if bound_form.is_valid() and post.user == user:
-                bound_form.save()
-                return 200
-        return 403
-
-
-
+b = {
+    "permission_settings": {
+        "see_comments_permission": 3,
+        "comment_permission": 2,
+        "like_permission": 1,
+        "repost_permission": 0,
+        "see_statistic_permission": 0,
+        "see_author_permission": 0,
+        "see_post_permission": 1
+    },
+    "tags": "0,1336",
+    "title": "111",
+    "body": "_ . _ . _"
+}

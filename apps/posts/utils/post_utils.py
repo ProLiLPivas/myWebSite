@@ -22,7 +22,7 @@ class PostUtils:
 
     @staticmethod
     def create_or_get_tags(t, new_obj):
-        tags = PostSerializer.parseTags(t)
+        tags = t.split(',')
         tags_dict = []
         if tags != ['']:
             for tag in tags:
@@ -110,10 +110,10 @@ class PostUtils:
     def like_object(like, model_obj):
         if like != 0 and model_obj != 0:
             if not like.exist:
-                like.exist = True
+                like.is_exist = True
                 model_obj.likes_amount += 1
             else:
-                like.exist = False
+                like.is_exist = False
                 model_obj.likes_amount -= 1
             like.save()
             model_obj.save()
@@ -125,10 +125,10 @@ class PostUtils:
         model_obj = model.objects.get(id=int(id))
         if model == Post:
             if model_obj.like_permission <= PostUtils.get_permission(model_obj, user):
-                return (Like.objects.get_or_create(user=user, post=model_obj))[0], model_obj
+                return (PostLike.objects.get_or_create(user=user, post=model_obj))[0], model_obj
             else: return 0, 0
         elif model == Comment:
-            return (Like.objects.get_or_create(user=user, comment=model_obj))[0], model_obj
+            return (CommentLike.objects.get_or_create(user=user, comment=model_obj))[0], model_obj
         else:
             return None, None
 
@@ -139,7 +139,6 @@ class PostUtils:
 
     @staticmethod
     def get_permission(post, user):
-
         if post.user == user:
             return 4
         rel = UsersRelation.objects.get_or_create(

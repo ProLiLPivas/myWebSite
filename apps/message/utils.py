@@ -9,17 +9,11 @@ from apps.user_profile.models import UsersRelation
 
 
 def parseId_and_gen_request(text):
-        q = ''
-        id_list = parseId(text)
+        q = Q()
+        for message_id in text.split(','):
+            q = q | Q(id=message_id)
+        return Message.objects.filter(q)
 
-        for message_id in id_list:
-            if q == '':
-                q = Q(id=message_id)
-            else:
-                q = q | Q(id=message_id)
-
-        messages = Message.objects.filter(q)
-        return messages
 
 
 
@@ -168,17 +162,6 @@ def connection_to_dict(connection_obj):
         return connection_dict
 
 
-def parseId(text):
-
-        id, id_list = '', []
-        for symbol in text:
-            if not symbol == ',':
-                id += symbol
-            else:
-                id_list.append(int(id))
-                id = ''
-        id_list.append(int(id))
-        return id_list
 
 # chat chenges
 
@@ -186,7 +169,7 @@ def addUsers(request):
         data = []
         id = int(request.POST['chat_id'])
         chat = Chat.objects.get(id=id)
-        friends = parseId(request.POST['friends'])
+        friends = request.POST['friends'].split(',')
         for user_id in friends:
             connection = generate_connections(user=user_id, chat=chat)
             data.append(connection_to_dict(connection))

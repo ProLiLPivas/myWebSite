@@ -22,6 +22,8 @@ class APIBaseChat(APIView):
         return Response(serializer.data)
 
 
+
+
 class APIPrivateChat(APIBaseChat):
     second_query_parameter = 'recipient'
 
@@ -36,11 +38,25 @@ class APIChatsList(APIView):
         serializer = ChatsListSerializer(queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
+
 class APINewChat(APIFriendsList):
-    pass
+
+    def post(self, request):
+        pass
 
 class APIAddUserToChat(APIFriendsList):
-   pass
+    pass
+
+class APIMessage(APIView):
+
+    def post(self, request):
+        pass
+
+    def put(self, request):
+        pass
+
+    def delete(self, request):
+        pass
 
 
 class MessagesLit(View):
@@ -162,7 +178,7 @@ class CreateChat(View):
         return render(request, self.template)
 
     def post(self, request):
-        friends = parseId(request.POST['friends'])
+        friends = request.POST['friends'].split(',')
 
         if  request.POST['is_public'] == 'true':
             chat = Chat.objects.create(chat_name=request.POST['chat_name'], is_public=True)  # creating chat

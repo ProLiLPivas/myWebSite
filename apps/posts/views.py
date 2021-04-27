@@ -4,7 +4,7 @@ from django.views.generic import View
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-
+from rest_framework.generics import CreateAPIView
 from .serializers import *
 
 from apps.posts.utils.post_mixins import *
@@ -13,27 +13,137 @@ from .forms import *
 from .models import *
 
 
-class APIFeed(APIView):
+def like_object(obj):
+    if obj[1]:
+        return
+    obj[0].is_exist = not obj[0].is_exist
+    obj[0].save()
+    return
 
+
+class APIPostsList(APIView):
     def get(self, request,):
-        queryset = Post.objects.filter(user__id=1)
-
-        serializer = FeedSerializer(queryset, many=True, context={'request': request})
+        queryset = Post.objects.filter()
+        serializer = FeedSerializer(
+                queryset, many=True, context={'request': request})
         return Response(serializer.data)
 
 
 class APIPost(APIView):
     def get(self, request, id):
         queryset = Post.objects.filter(id=id)
-        serializer = SinglePostSerializer(queryset, many=True, context={'request': request})
+        serializer = SinglePostSerializer(
+                queryset, many=True, context={'request': request})
         return Response(serializer.data)
+
+
+class APICreatePost(APIView):
+
+    def post(self, request):
+
+        context = {
+            'tags': request.data.get('tags', '').split(','),
+            'user': {'user': request.user},
+            'permission_settings': request.data.get('permission_settings', {})
+        }
+
+        serializer = CreatePostSerializer(data=request.data, context=context)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(status=201)
+        print(serializer.errors)
+        return Response()
+
+
+
+
+class APIEditPost(APIView):
+
+    def put(self, request, id):
+        post = Post.objects.get(id=id)
+        if request.user == post.user:
+            context = {
+                'tags': request.data.get('tags', '').split(','),
+                'permission_settings': request.data.get('permission_settings', {})
+            }
+            serializer = UpdateSerializer(
+                instance=post, data=request.data, context=context)
+            print(serializer)
+            if serializer.is_valid():
+                serializer.save(is_changed=True)
+                return Response(status=201)
+            return Response(status=400)
+        return Response(status=403)
+
+
+    def patch(self, request, id):
+        post = Post.objects.get(id=id)
+        if post.like_permission < post.get_relations_status(request.user):
+            like_object(PostLike.objects.get_or_create(user=request.user, obj=post))
+            return Response(status=201)
+        return Response(status=403)
+
+    def delete(self, request, id):
+        post = Post.objects.get(id=id)
+        if request.user == post.user or request.user.is_staff:
+            post.delete()
+            return Response(status=204)
+        return Response(status=403)
 
 
 class APIComments(APIView):
+
     def get(self, request, id):
-        queryset = Comment.objects.filter(post=id)
-        serializer = CommentsSerializer(queryset, many=True, context={'request': request})
-        return Response(serializer.data)
+        post = Post.objects.get(id=id)
+        if post.see_comments_permission <= post.get_relations_status(
+                request.user):
+            queryset = Comment.objects.filter(post=post)
+            serializer = CommentsSerializer(queryset, many=True, context={'request': request})
+            return Response(serializer.data)
+        return Response(status=403)
+
+    def post(self, request, id):
+        post = Post.objects.get(id=id)
+        if post.comment_permission <= post.get_relations_status(request.user):
+            if request.data.get('text'):
+                context = {'user': request.user, 'post': post}
+                serializer = CreateCommentSerializer(data=request.data, context=context)
+                if serializer.is_valid():
+                    serializer.save()
+                    return Response(status=201)
+            return Response(status=400)
+        return Response(status=403)
+
+
+class APIEditComment(APIView):
+
+    def put(self, request, id):
+        comment = Comment.objects.get(id=id)
+        if request.user == comment.user:
+            if request.data.get('text'):
+                serializer = CreateCommentSerializer(data=request.data, instance=comment)
+                if serializer.is_valid():
+                    serializer.save(is_changed=True)
+                    return Response(status=201)
+            return Response(status=400)
+        return Response(status=403)
+
+    def patch(self, request, id):
+        comment = Comment.objects.get(id=id)
+        if comment.post.see_comments_permission <= \
+                comment.post.get_relations_status(request.user):
+            like_object(CommentLike.objects.get_or_create(
+                    user=request.user, obj=comment))
+            return Response(status=201)
+        return Response(status=403)
+
+    def delete(self, request, id):
+        comment = Comment.objects.get(id=id)
+        if request.user == comment.user or request.user == comment.post.user \
+                or request.user.is_staff:
+            comment.delete()
+            return Response(status=204)
+        return Response(status=403)
 
 
 class APITags(APIView):
@@ -89,7 +199,7 @@ class ReadPost(FeedMixin, View):  # read details about post
 
 class CreatePost(View, LoginRequiredMixin):
     model = Post
-    model_form = PostForm
+    model_form = None
 
     def post(self, request):
         new_post = PostUtils.create_post(request.POST, request.user)
@@ -101,7 +211,7 @@ class CreatePost(View, LoginRequiredMixin):
 
 class UpdatePost(View, LoginRequiredMixin):
     model = Post
-    model_form = PostForm
+    model_form = None
 
     def post(self, request):
         updated_post, status = PostUtils.update_post(request.POST, request.POST['post_id'], request.user)

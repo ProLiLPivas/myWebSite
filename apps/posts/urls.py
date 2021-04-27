@@ -28,9 +28,16 @@ urlpatterns = [
     # path('tags/<str:slug>/update/', UpdateTag.as_view(), name='update_tag_url'),
     # path('tags/<str:slug>/delete/', DeleteTag.as_view(), name='delete_tag_url'),
 
-    path('api/', APIFeed.as_view()),
+    path('api/', APIPostsList.as_view()),
+    path('api/filter/', APIPostsList.as_view()),
+    path('post/create/api/', APICreatePost.as_view()),
     path('post=<int:id>/api/', APIPost.as_view()),
+    path('post=<int:id>/edit/api/', APIEditPost.as_view()),
+
     path('comment/post=<int:id>/api/', APIComments.as_view()),
+    # path('comment/post=<int:id>/create/api/', APICreateComments.as_view()),
+    path('comment=<int:id>/edit/api/', APIEditComment.as_view(), name='update_comment_url'),
+
     path('tags/api/', APITags.as_view(), name='tags_list_url'),
     path('tag=<str:slug>/api/', APITag.as_view(), ),
 ]

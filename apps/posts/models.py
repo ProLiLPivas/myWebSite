@@ -27,7 +27,7 @@ class Post(models.Model):
     default_permission_settings = {'choices': PERMISSIONS_TYPES , 'default': 0}
 
     title = models.CharField(max_length=150 , db_index=True)
-    slug = models.SlugField(max_length=150 , blank=True , unique=True)
+     # slug = models.SlugField(max_length=150 , blank=True , unique=True)
     body = models.TextField(blank=True , db_index=True)
     date_publication = models.DateTimeField(auto_now_add=True)
     tag = models.ManyToManyField('Tag' , blank=True , related_name='posts')
@@ -70,10 +70,18 @@ class Post(models.Model):
             'repost_permission': self.repost_permission <= permission,
         }
 
-    def save(self , *args , **kwargs):
+    def save(self , *args, **kwargs):
         if not self.id:
             self.slug = generate_slug(self.title)
+            self.user.profile.posts += 1
+            self.user.save()
         super().save(*args , **kwargs)
+
+    def delete(self, **kwargs):
+        self.user.profile.posts -= 1
+        self.user.save()
+        super().delete(**kwargs)
+
 
     def __str__(self):
         return self.title
@@ -84,7 +92,7 @@ class Post(models.Model):
 
 class Tag(models.Model):
     title = models.CharField(max_length=150)
-    slug = models.SlugField(max_length=150 , blank=True)
+    slug = models.SlugField(max_length=150, blank=True)
 
     # user = models.ForeignKey(User, blank=True, on_delete=models.CASCADE)
 
@@ -107,8 +115,8 @@ class Tag(models.Model):
 
 
 class Comment(models.Model):
-    user = models.ForeignKey(User , on_delete=models.CASCADE)
-    post = models.ForeignKey(Post , on_delete=models.CASCADE , )
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    post = models.ForeignKey(Post, on_delete=models.CASCADE)
     text = models.TextField()
     time = models.TimeField(auto_now_add=True)
     likes_amount = models.IntegerField(default=0)
@@ -117,20 +125,39 @@ class Comment(models.Model):
     class Meta:
         ordering = ['-time']
 
+    def save(self, **kwargs):
+        if not self.id:
+            self.post.comments_amount += 1
+            self.post.save()
+        super().save(**kwargs)
+
+    def delete(self, **kwargs):
+        self.post.comments_amount -= 1
+        self.post.save()
+        super().delete(**kwargs)
+
 
 class BaseLike(models.Model):
 
     obj = None
     user = models.ForeignKey(User , on_delete=models.CASCADE , default='1')
-    is_exist = models.BooleanField(default=False)
+    is_exist = models.BooleanField(default=True)
 
     @classmethod
     def get_is_liked(cls, obj, user):
-        like: cls = cls.objects.filter(obj=obj, user=user)
+        like = cls.objects.filter(obj=obj, user=user)
         if like:
-            if like.is_exist:
+            if like[0].is_exist:
                 return True
         return False
+
+    def save(self, **kwargs):
+        super().save(**kwargs)
+        if self.is_exist:
+            self.obj.likes_amount += 1
+        else:
+            self.obj.likes_amount -= 1
+        self.obj.save()
 
 
 class PostLike(BaseLike):

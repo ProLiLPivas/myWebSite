@@ -1,5 +1,3 @@
-from typing import Tuple
-
 from django.forms import model_to_dict
 from django.http import JsonResponse, HttpResponse
 from django.db.models import Q
@@ -12,9 +10,13 @@ from apps.posts.serializers import UserSerializer
 from .forms import *
 from .models import *
 
+
 class ChatUserSerializer(UserSerializer):
     role = serializers.SerializerMethodField()
-    UserSerializer.Meta.fields = ('id', 'username', 'url', 'avatar', 'role')
+
+    class Meta:
+        model = User
+        fields = ('id', 'username', 'url', 'avatar', 'role')
 
     def get_role(self, obj: User):
         if self.context.get('chat'):
@@ -25,6 +27,7 @@ class ChatUserSerializer(UserSerializer):
                 return self.context.get('roles').get(obj)
             return 0
         return
+
 
 class ChatSettingsSerializer(serializers.ModelSerializer):
     class Meta:
@@ -73,11 +76,13 @@ class ChatSerializer(serializers.ModelSerializer):
         roles = dict(set((user_and_roles)))
         context = {'chat': obj , 'roles': roles}
 
-        return ChatUserSerializer(roles.keys(), many=True, context=context).data
+        return \
+            ChatUserSerializer(roles.keys(), many=True, context=context).data
 
     def get_messages(self, obj: Chat):
         queryset = Message.objects.filter(chat=obj)
-        return MessageSerializer(queryset, many=True, context={'chat': obj}).data
+        return \
+            MessageSerializer(queryset, many=True, context={'chat': obj}).data
 
     def get_chat_image(self, obj: Chat):
         if not obj.is_public:
@@ -100,8 +105,9 @@ class ChatsListSerializer(ChatSerializer):
     last_message = serializers.SerializerMethodField()
     url = serializers.SerializerMethodField()
 
-    ChatSerializer.Meta.fields = ('id', 'chat_name', 'chat_image',
-                                  'url', 'last_message',)
+    class Meta:
+        model = Chat
+        fields = ('id', 'chat_name', 'chat_image', 'url', 'last_message',)
 
     def get_last_message(self, obj: Chat):
         queryset = Message.objects.get(id=obj.last_message_id)
@@ -116,7 +122,7 @@ class ChatsListSerializer(ChatSerializer):
 
 def parseId_and_gen_request(text):
         q = ''
-        id_list = parseId(text)
+        id_list = text.split(',')
 
         for message_id in id_list:
             if q == '':
@@ -128,8 +134,7 @@ def parseId_and_gen_request(text):
         return messages
 
 
-
-def  update_message (text, msg_id, user):
+def update_message(text, msg_id, user):
         data = {'text': text}
         instance = Message.objects.get(id=int(msg_id))
 
@@ -274,17 +279,6 @@ def connection_to_dict(connection_obj):
         return connection_dict
 
 
-def parseId(text):
-
-        id, id_list = '', []
-        for symbol in text:
-            if not symbol == ',':
-                id += symbol
-            else:
-                id_list.append(int(id))
-                id = ''
-        id_list.append(int(id))
-        return id_list
 
 # chat chenges
 
@@ -292,7 +286,7 @@ def addUsers(request):
         data = []
         id = int(request.POST['chat_id'])
         chat = Chat.objects.get(id=id)
-        friends = parseId(request.POST['friends'])
+        friends = request.POST['friends'].split(',')
         for user_id in friends:
             connection = generate_connections(user=user_id, chat=chat)
             data.append(connection_to_dict(connection))
