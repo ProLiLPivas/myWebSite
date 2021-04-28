@@ -37,15 +37,17 @@ class ProfileSerializer(serializers.ModelSerializer):
     stats = serializers.SerializerMethodField()
     about = serializers.SerializerMethodField()
     msg_url = serializers.SerializerMethodField()
+    # extra_kwargs = {'relations_status': relations_status}
 
     class Meta:
         model = Profile
         fields = ('id', 'user', 'albums', 'avatar', 'stats', 'about', 'is_online',
-            'access_settings', 'msg_url', 'posts',)
+            'access_settings', 'msg_url', 'posts', )
+
 
     def to_representation(self, instance: Profile):
         self.relations_status = \
-            instance.get_relations_status(self.context['request'].user)
+            instance.get_relations_status(self.context['user'])
         return super().to_representation(instance)
 
     def get_posts(self, obj: Profile):
@@ -85,8 +87,11 @@ class ProfileSerializer(serializers.ModelSerializer):
         return ProfileSettingsSerializer(obj).data
 
     def get_msg_url(self, obj: Profile):
-        return obj.get_chat_url()
+        if obj.is_messaging_accessible(self.context['user']):
+            return obj.get_chat_url()
 
+    def rel_status(self, obj: Profile):
+        return obj.get_relations_status(self.context['user'])
 
 class RelatedUsersSerializer(ProfileSerializer):
     url = serializers.SerializerMethodField()

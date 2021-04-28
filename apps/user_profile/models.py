@@ -56,6 +56,10 @@ class Profile(models.Model):
             secondary_user_profile=self
         )[0].get_relations_status()
 
+    def is_messaging_accessible(self, user: User):
+        relation_status = self.get_relations_status(user)
+        return relation_status >= self.access_messaging
+
 
 class UsersRelation(models.Model):
     main_user_profile = models.ForeignKey(

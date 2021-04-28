@@ -19,7 +19,7 @@ class ChatSettingsForm(forms.ModelForm):
     class Meta:
         model = Chat
         fields = [
-            'see_messages',
+            # 'see_messages',
             # 'send_messages',
             'del_messages',
             'add_new_users',

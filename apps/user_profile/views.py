@@ -19,7 +19,7 @@ class APIUserProfile(APIView):
     def get(self, request, slug):
         queryset = Profile.objects.filter(slug=slug)
         serializer = ProfileSerializer(queryset , many=True,
-                                    context={'request': request})
+                                    context={'user': request.user})
         return Response(serializer.data)
 
     def post(self, request, slug):
@@ -69,7 +69,7 @@ class BaseRelatedUsersView(APIView):
             id = request.user.id
         self.get_query_set(request=request, id=id)
         serializer = RelatedUsersSerializer(
-            self.queryset , many=True, context={'request': request})
+            self.queryset , many=True, context={'user': request.user})
         return Response(serializer.data)
 
 

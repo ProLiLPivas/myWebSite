@@ -18,7 +18,7 @@ class APIPostsList(APIView):
     def get(self, request,):
         queryset = Post.objects.filter()
         serializer = FeedSerializer(
-                queryset, many=True, context={'request': request})
+                queryset, many=True, context={'user': request.user})
         return Response(serializer.data)
 
 
@@ -26,7 +26,7 @@ class APIPost(APIView):
     def get(self, request, id):
         queryset = Post.objects.filter(id=id)
         serializer = SinglePostSerializer(
-                queryset, many=True, context={'request': request})
+                queryset, many=True, context={'user': request.user})
         return Response(serializer.data)
 
 
@@ -149,7 +149,7 @@ class APITags(APIView):
 class APITag(APIView):
     def get(self, request, slug):
         queryset = Post.objects.filter(tag__slug=slug)
-        serializer = FeedSerializer(queryset, context={'request': request})
+        serializer = FeedSerializer(queryset, context={'user': request.user})
         return Response(serializer.data)
 
 

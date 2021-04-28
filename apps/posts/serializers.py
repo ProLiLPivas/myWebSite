@@ -93,7 +93,7 @@ class CommentsSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
     def get_is_liked(self, obj: Post):
-        return CommentLike.get_is_liked(obj, self.context['request'].user)
+        return CommentLike.get_is_liked(obj, self.context['user'])
 
 
 class FeedSerializer(serializers.ModelSerializer):
@@ -110,7 +110,7 @@ class FeedSerializer(serializers.ModelSerializer):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.requested_from: User = self.context['request'].user
+        self.requested_from: User = self.context['user']
         self.relation_statuses_dict = \
             get_relation_statuses_dict(self.instance, self.requested_from)
 
